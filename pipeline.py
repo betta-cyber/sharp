@@ -5,7 +5,7 @@ import json
 from threading import Thread
 from pyppeteer import launch
 from bs4 import BeautifulSoup
-from utils import redis_c
+from utils import redis_c, load_yaml
 
 
 class Pipeline:
@@ -14,7 +14,6 @@ class Pipeline:
         self.target = {}
 
     async def parser(self, target):
-        print(target)
         browser = await launch(
             headless=False,
             args=['--disable-infobars', '--no-sandbox']
@@ -31,9 +30,12 @@ class Pipeline:
 
     async def analysis(self, html):
         data = BeautifulSoup(html, 'html.parser')
+        rule = load_yaml('rule/tc260.yml')
 
-        self.target['source'] = ""
-        self.target['abstract'] = data.select('title')
+        title_dom = data.select(rule['title'])
+        self.target['title'] = title_dom[0].get_text()
+        abstract_dom = data.select(rule['abstract'])
+        self.target['abstract'] = abstract_dom[0].get_text()
 
         print(self.target)
 
