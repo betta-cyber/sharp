@@ -1,0 +1,5 @@
+url: "https://www.tc260.org.cn/front/hydtList.html?start=0&length=1000&postType=1"
+event_type: "新闻动态"
+source: "信息安全标准化技术委员会"
+pattern:
+  list_class: "list_title_news"

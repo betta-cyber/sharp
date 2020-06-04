@@ -1,0 +1,9 @@
+title:
+  type: text
+  pattern: body > div.container.contentBg > div > div.news_end > div.news_end_tit
+start:
+  type: static
+  pattern: "xxx"
+abstract:
+  type: text
+  pattern: "#new_content"
