@@ -43,12 +43,23 @@ class Pipeline:
 
     def get_value(self, selector):
         try:
-            if selector['type'] == "text":
-                dom = self.content.select(selector['pattern'])
-                value = dom[0].get_text()
-                return value
             if selector['type'] == "static":
                 return selector['pattern']
+            else:
+                if selector['type'] == "selector":
+                    if selector['struct'] == "string":
+                        dom = self.content.select(selector['pattern'])
+                        value = dom[0].get_text()
+                        return value
+                    if selector['struct'] == 'list':
+                        # dom = self.content.select(selector['pattern'])
+                        # value = dom[0].get_text()
+                        # return value
+                        pass
+                if selector['type'] == "xpath":
+                    pass
+                # todo:
+                # other select tool
         except Exception as e:
             print(str(e))
             return ""

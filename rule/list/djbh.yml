@@ -1,0 +1,5 @@
+url: "http://www.djbh.net/webdev/web/HomeWebAction.do?p=getlistHomeXxgg"
+event_type: "新闻动态"
+source: "等保门户网"
+pattern:
+  list_class: "list_title_news"

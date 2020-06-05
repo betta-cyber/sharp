@@ -2,18 +2,19 @@
 
 import asyncio
 import json
+from urllib.parse import urlparse
 from threading import Thread
 from pyppeteer import launch
 from bs4 import BeautifulSoup
 from utils import redis_c, load_yaml
 
 
-class Pipeline:
+class Listpipe:
 
     def __init__(self, target):
         self.list_obj = load_yaml('rule/list/%s.yml' % target['type'])
-        self.url = self.list_obj['url']
         self.result = {}
+        self.url_info = None
         self.content = ""
 
     def __del__(self):
@@ -30,7 +31,9 @@ class Pipeline:
 
         # need get page and pagesize
         # for loop
-        await page.goto(self.url)
+        self.url_info = urlparse(self.list_obj['url'])
+
+        await page.goto(self.list_obj['url'])
         self.content = await page.content()
 
         await browser.close()
@@ -39,7 +42,7 @@ class Pipeline:
     async def analysis(self):
         self.content = BeautifulSoup(self.content, 'html.parser')
         list_dom = self.content.find_all('li', class_=self.list_obj['pattern']['list_class'])
-        base_url = "https://www.tc260.org.cn"
+        base_url = "%s://%s" % (self.url_info.scheme, self.url_info.netloc)
         for i in list_dom:
             url_dom = i.find('a')
             url = base_url + url_dom['href']
@@ -73,5 +76,5 @@ if __name__ == '__main__':
         target = redis_c.rpop("list")
         if target:
             target = json.loads(target)
-            p = Pipeline(target)
+            p = Listpipe(target)
             asyncio.run_coroutine_threadsafe(p.parser(), new_loop)
