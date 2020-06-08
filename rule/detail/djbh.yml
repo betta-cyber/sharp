@@ -3,12 +3,13 @@ title:
   struct: string
   pattern: "#WenziB > span"
 start:
-  type: static
-  struct: string
-  pattern: "xxx"
+  type: func
+  struct: list
+  pattern: "find_time"
 abstract:
   type: selector
   struct: string
+  length: 200
   pattern: "#zhongwenzi > blockquote"
 raw_url:
   type: system
@@ -18,3 +19,8 @@ source:
   type: static
   struct: string
   pattern: "网络安全等级保护网"
+event_type:
+  type: system
+  struct: string
+  pattern: $event_type
+

@@ -2,10 +2,12 @@
 
 import asyncio
 import json
+from datetime import datetime
 from threading import Thread
 from pyppeteer import launch
 from bs4 import BeautifulSoup
 from utils import redis_c, load_yaml
+from module.date_parser import TimeFinder
 
 
 class Pipeline:
@@ -13,6 +15,7 @@ class Pipeline:
     def __init__(self, target):
         self.target = load_yaml('rule/detail/%s.yml' % target['type'])
         self.url = target['url']
+        self.event_type = target['event_type']
         self.result = {}
         self.content = ""
 
@@ -46,11 +49,18 @@ class Pipeline:
             if selector['type'] == "static":
                 return selector['pattern']
             else:
+                if selector['type'] == "system":
+                    if selector['pattern'].startswith('$'):
+                        if selector['pattern'] == "$url":
+                            value = self.url
+                        if selector['pattern'] == "$event_type":
+                            value = self.event_type
+                    else:
+                        return ''
                 if selector['type'] == "selector":
                     if selector['struct'] == "string":
                         dom = self.content.select(selector['pattern'])
                         value = dom[0].get_text()
-                        return value
                     if selector['struct'] == 'list':
                         # dom = self.content.select(selector['pattern'])
                         # value = dom[0].get_text()
@@ -58,11 +68,22 @@ class Pipeline:
                         pass
                 if selector['type'] == "xpath":
                     pass
+                if selector['type'] == "func":
+                    if selector['pattern'] == 'find_time':
+                        text = self.content.get_text()
+                        timefinder = TimeFinder(base_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                        value = timefinder.find_time(text)
+                        value = list(set(value))
                 # todo:
                 # other select tool
         except Exception as e:
             print(str(e))
-            return ""
+        # filter length
+        try:
+            value = value[:selector['length']]
+        except Exception:
+            pass
+        return value
 
 
 def start_thread_loop(loop):

@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from threading import Thread
 from pyppeteer import launch
 from bs4 import BeautifulSoup
-from utils import redis_c, load_yaml
+from utils import redis_c, load_yaml, md5
 
 
 class Listpipe:
@@ -20,6 +20,13 @@ class Listpipe:
     def __del__(self):
         pass
 
+    def unique_url(self, url):
+        key = "URL_HASH"
+        if not redis_c.hget(key, md5(url)):
+            redis_c.hset(key, md5(url), 1)
+            return True
+        return False
+
     async def parser(self):
         browser = await launch(
             headless=False,
@@ -31,34 +38,36 @@ class Listpipe:
 
         # need get page and pagesize
         # for loop
-        self.url_info = urlparse(self.list_obj['url'])
+        for list_obj in self.list_obj:
+            self.url_info = urlparse(list_obj['url'])
 
-        await page.goto(self.list_obj['url'])
-        self.content = await page.content()
+            await page.goto(list_obj['url'])
+            self.content = await page.content()
+            await self.analysis(list_obj)
 
         await browser.close()
-        await self.analysis()
 
-    async def analysis(self):
+    async def analysis(self, list_obj):
         self.content = BeautifulSoup(self.content, 'html.parser')
-        list_dom = self.content.find_all('li', class_=self.list_obj['pattern']['list_class'])
+        if list_obj['pattern']['type'] == "list":
+            list_dom = self.content.find_all('li', class_=list_obj['pattern']['class'])
+        if list_obj['pattern']['type'] == "table":
+            list_dom = self.content.find_all('tr')
         base_url = "%s://%s" % (self.url_info.scheme, self.url_info.netloc)
         for i in list_dom:
-            url_dom = i.find('a')
-            url = base_url + url_dom['href']
-            print(url)
-
-    def get_value(self, selector):
-        try:
-            if selector['type'] == "text":
-                dom = self.content.select(selector['pattern'])
-                value = dom[0].get_text()
-                return value
-            if selector['type'] == "static":
-                return selector['pattern']
-        except Exception as e:
-            print(str(e))
-            return ""
+            try:
+                url_dom = i.find('a')
+                url = base_url + url_dom['href']
+                if self.unique_url(url):
+                    u = {
+                        "type": list_obj['type'],
+                        "url": url,
+                        "event_type": list_obj['event_type']
+                    }
+                    redis_c.lpush('list', json.dumps(u))
+                    print("push url %s" % url)
+            except Exception:
+                pass
 
 
 def start_thread_loop(loop):

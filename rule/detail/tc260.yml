@@ -1,9 +1,26 @@
 title:
-  type: text
+  type: selector
+  struct: string
   pattern: body > div.container.contentBg > div > div.news_end > div.news_end_tit
 start:
-  type: static
-  pattern: "xxx"
+  type: func
+  struct: string
+  pattern: "find_time"
 abstract:
-  type: text
+  type: selector
+  struct: string
+  length: 200
   pattern: "#new_content"
+raw_url:
+  type: system
+  struct: string
+  pattern: $url
+source:
+  type: static
+  struct: string
+  pattern: "信息安全标准化技术委员会"
+event_type:
+  type: system
+  struct: string
+  pattern: $event_type
+

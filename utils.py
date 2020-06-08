@@ -2,6 +2,7 @@
 
 import redis
 import yaml
+import hashlib
 from config import AppConfig
 
 redis_config = AppConfig['default']
@@ -17,3 +18,7 @@ def load_yaml(path):
         content = yaml.load(f, Loader=yaml.FullLoader)
 
     return content
+
+
+def md5(data):
+    return hashlib.md5(data.encode(encoding='UTF-8')).hexdigest()
