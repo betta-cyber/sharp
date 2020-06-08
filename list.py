@@ -2,16 +2,35 @@
 
 import asyncio
 import json
+import requests
 from urllib.parse import urlparse
 from threading import Thread
 from pyppeteer import launch
 from bs4 import BeautifulSoup
 from utils import redis_c, load_yaml, md5
 
+COOKIES = {
+    'JSESSIONID': 'FFBA83C59236EEF7467EF304848A7BF3.TomcatA',
+    '__jsluid_h': 'e6cd73a71ef2fb89ddd612d44898d26f',
+    'flashSet': 'ture',
+}
+
+HEADERS = {
+    'Connection': 'keep-alive',
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'X-Requested-With': 'XMLHttpRequest',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36',
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Origin': 'http://www.cac.gov.cn',
+    'Referer': 'http://www.cac.gov.cn/wlaq/More.htm',
+    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6',
+}
+
 
 class Listpipe:
 
     def __init__(self, target):
+        self.ltype = target['type']
         self.list_obj = load_yaml('rule/list/%s.yml' % target['type'])
         self.result = {}
         self.url_info = None
@@ -28,24 +47,29 @@ class Listpipe:
         return False
 
     async def parser(self):
-        browser = await launch(
-            headless=False,
-            args=['--disable-infobars', '--no-sandbox']
-        )
-        page = await browser.newPage()
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                                '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
-
         # need get page and pagesize
         # for loop
         for list_obj in self.list_obj:
-            self.url_info = urlparse(list_obj['url'])
+            if not list_obj['url'].startswith('$'):
+                browser = await launch(
+                    headless=False,
+                    args=['--disable-infobars', '--no-sandbox']
+                )
+                page = await browser.newPage()
+                await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
+                self.url_info = urlparse(list_obj['url'])
+                await page.goto(list_obj['url'])
+                self.content = await page.content()
+                await self.analysis(list_obj)
+                await browser.close()
+            else:
+                if list_obj['url'] == "$requests":
+                    data = list_obj['data']
+                    r = requests.post(data['url'], headers=HEADERS, cookies=COOKIES, data=data['data'], verify=False)
+                    self.content = r.json()
+                    self.analysis_json(list_obj)
 
-            await page.goto(list_obj['url'])
-            self.content = await page.content()
-            await self.analysis(list_obj)
-
-        await browser.close()
 
     async def analysis(self, list_obj):
         self.content = BeautifulSoup(self.content, 'html.parser')
@@ -60,14 +84,28 @@ class Listpipe:
                 url = base_url + url_dom['href']
                 if self.unique_url(url):
                     u = {
-                        "type": list_obj['type'],
+                        "type": self.ltype,
                         "url": url,
                         "event_type": list_obj['event_type']
                     }
-                    redis_c.lpush('list', json.dumps(u))
+                    redis_c.lpush('target', json.dumps(u))
                     print("push url %s" % url)
             except Exception:
                 pass
+
+    def analysis_json(self, list_obj):
+        for i in self.content['list']:
+            url = i[list_obj['pattern']['key']]
+            if self.unique_url(url):
+                u = {
+                    "type": self.ltype,
+                    "url": url,
+                    "event_type": list_obj['event_type']
+                }
+                redis_c.lpush('target', json.dumps(u))
+                print("push url %s" % url)
+            else:
+                print("exist url %s" % url)
 
 
 def start_thread_loop(loop):

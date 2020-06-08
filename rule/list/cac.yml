@@ -1,0 +1,39 @@
+-
+  url: $requests
+  data:
+    url: "http://www.cac.gov.cn/cms/JsonList"
+    data:
+      channelCode: A0905
+      perPage: 4000
+      pageno: 1
+  event_type: "新闻动态"
+  source: "网信办"
+  pattern:
+    type: "json"
+    key: "infourl"
+-
+  url: $requests
+  data:
+    url: "http://www.cac.gov.cn/cms/JsonList"
+    data:
+      channelCode: A090302
+      perPage: 4000
+      pageno: 1
+  event_type: "权威发布"
+  source: "网信办"
+  pattern:
+    type: "json"
+    key: "infourl"
+-
+  url: $requests
+  data:
+    url: "http://www.cac.gov.cn/cms/JsonList"
+    data:
+      channelCode: A0909
+      perPage: 4000
+      pageno: 1
+  event_type: "法文法规"
+  source: "网信办"
+  pattern:
+    type: "json"
+    key: "infourl"

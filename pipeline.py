@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import time
 from datetime import datetime
 from threading import Thread
 from pyppeteer import launch
@@ -41,6 +42,8 @@ class Pipeline:
         self.content = BeautifulSoup(self.content, 'html.parser')
 
         for k, v in self.target.items():
+            if not k or not v:
+                raise Exception('config error')
             self.result[k] = self.get_value(v)
         print(self.result)
 
@@ -97,9 +100,12 @@ if __name__ == '__main__':
     loop_thread.setDaemon(True)
     loop_thread.start()
 
+    print('-------init pipeline--------')
     while True:
         target = redis_c.rpop("target")
         if target:
             target = json.loads(target)
+            print("start %s" % target)
             p = Pipeline(target)
             asyncio.run_coroutine_threadsafe(p.parser(), new_loop)
+        time.sleep(4)

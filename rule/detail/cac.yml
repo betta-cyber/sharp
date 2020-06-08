@@ -1,3 +1,26 @@
-title: 
+title:
+  type: selector
+  struct: string
+  pattern: "#title"
 start:
+  type: func
+  struct: string
+  pattern: "find_time"
+abstract:
+  type: selector
+  struct: string
+  length: 200
+  pattern: "#content"
+raw_url:
+  type: system
+  struct: string
+  pattern: $url
+source:
+  type: static
+  struct: string
+  pattern: "网信办"
+event_type:
+  type: system
+  struct: string
+  pattern: $event_type
 
