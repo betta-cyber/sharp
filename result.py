@@ -52,4 +52,4 @@ if __name__ == '__main__':
             print("start %s" % result)
             r = Result(result)
             asyncio.run_coroutine_threadsafe(r.process(), main_loop)
-        time.sleep(100)
+        time.sleep(3)

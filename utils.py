@@ -5,6 +5,7 @@ import yaml
 import pymysql
 import requests
 import hashlib
+from datetime import datetime, timedelta
 from config import AppConfig
 
 redis_config = AppConfig['default']
@@ -24,6 +25,13 @@ def load_yaml(path):
 
 def md5(data):
     return hashlib.md5(data.encode(encoding='UTF-8')).hexdigest()
+
+
+def get_today_zero():
+    now = datetime.now()
+    zero_time = now - timedelta(hours=now.hour, minutes=now.minute, seconds=now.second, \
+                                microseconds=now.microsecond)
+    return zero_time.strftime('%Y-%m-%d %H:%M:%S')
 
 
 class DBHelper:

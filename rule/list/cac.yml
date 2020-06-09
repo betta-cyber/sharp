@@ -8,6 +8,8 @@
       pageno: 1
   event_type: "新闻动态"
   source: "网信办"
+  basetime:
+    key: "pubtime"
   pattern:
     type: "json"
     key: "infourl"
@@ -21,8 +23,10 @@
       pageno: 1
   event_type: "权威发布"
   source: "网信办"
-  pattern:
+  basetime:
     type: "json"
+    key: "pubtime"
+  pattern:
     key: "infourl"
 -
   url: $requests
@@ -34,6 +38,8 @@
       pageno: 1
   event_type: "法文法规"
   source: "网信办"
+  basetime:
+    key: "pubtime"
   pattern:
     type: "json"
     key: "infourl"

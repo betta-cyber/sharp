@@ -3,6 +3,7 @@
 import asyncio
 import json
 import requests
+import time
 from urllib.parse import urlparse
 from threading import Thread
 from pyppeteer import launch
@@ -52,7 +53,7 @@ class Listpipe:
         for list_obj in self.list_obj:
             if not list_obj['url'].startswith('$'):
                 browser = await launch(
-                    headless=False,
+                    headless=True,
                     args=['--disable-infobars', '--no-sandbox']
                 )
                 page = await browser.newPage()
@@ -86,7 +87,8 @@ class Listpipe:
                     u = {
                         "type": self.ltype,
                         "url": url,
-                        "event_type": list_obj['event_type']
+                        "event_type": list_obj['event_type'],
+                        "basetime": i[list_obj['basetime']['key']][:-2]
                     }
                     redis_c.lpush('target', json.dumps(u))
                     print("push url %s" % url)
@@ -100,7 +102,8 @@ class Listpipe:
                 u = {
                     "type": self.ltype,
                     "url": url,
-                    "event_type": list_obj['event_type']
+                    "event_type": list_obj['event_type'],
+                    "basetime": i[list_obj['basetime']['key']][:-2]
                 }
                 redis_c.lpush('target', json.dumps(u))
                 print("push url %s" % url)
@@ -125,3 +128,4 @@ if __name__ == '__main__':
             target = json.loads(target)
             p = Listpipe(target)
             asyncio.run_coroutine_threadsafe(p.parser(), new_loop)
+            time.sleep(30)

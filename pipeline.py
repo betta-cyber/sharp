@@ -3,11 +3,11 @@
 import asyncio
 import json
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from threading import Thread
 from pyppeteer import launch
 from bs4 import BeautifulSoup
-from utils import redis_c, load_yaml
+from utils import redis_c, load_yaml, get_today_zero
 from module.date_parser import TimeFinder
 
 
@@ -16,6 +16,7 @@ class Pipeline:
     def __init__(self, target):
         self.target = load_yaml('rule/detail/%s.yml' % target['type'])
         self.url = target['url']
+        self.basetime = target.get('basetime', None)
         self.event_type = target['event_type']
         self.result = {}
         self.content = ""
@@ -74,8 +75,12 @@ class Pipeline:
                     pass
                 if selector['type'] == "func":
                     if selector['pattern'] == 'find_time':
-                        text = self.content.get_text()
-                        timefinder = TimeFinder(base_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                        dom = self.content.select(selector['dom'])
+                        text = dom[0].get_text()
+                        if self.basetime:
+                            timefinder = TimeFinder(base_date=self.basetime)
+                        else:
+                            timefinder = TimeFinder(base_date=get_today_zero())
                         value = timefinder.find_time(text)
                 # todo:
                 # other select tool
@@ -108,4 +113,4 @@ if __name__ == '__main__':
             print("start %s" % target)
             p = Pipeline(target)
             asyncio.run_coroutine_threadsafe(p.parser(), main_loop)
-        time.sleep(3)
+        time.sleep(5)

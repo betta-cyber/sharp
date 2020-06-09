@@ -5,6 +5,8 @@
   pattern:
     type: "table"
     list_class: "#idData > tbody"
+  basetime:
+    pattern "\\d{4}-\\d{2}-\\d{2}"
 -
   url: "http://www.djbh.net/webdev/web/HomeWebAction.do?p=getlistHomeXxgg"
   event_type: "新闻动态"
@@ -12,3 +14,6 @@
   pattern:
     type: "table"
     list_class: "#idData > tbody > tr"
+  basetime:
+    pattern "\\d{4}-\\d{2}-\\d{2}"
+
