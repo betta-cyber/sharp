@@ -25,7 +25,7 @@ class Pipeline:
 
     async def parser(self):
         browser = await launch(
-            headless=False,
+            headless=True,
             args=['--disable-infobars', '--no-sandbox']
         )
         page = await browser.newPage()
@@ -46,6 +46,7 @@ class Pipeline:
                 raise Exception('config error')
             self.result[k] = self.get_value(v)
         print(self.result)
+        redis_c.lpush('result', json.dumps(self.result))
 
     def get_value(self, selector):
         try:
@@ -76,7 +77,6 @@ class Pipeline:
                         text = self.content.get_text()
                         timefinder = TimeFinder(base_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                         value = timefinder.find_time(text)
-                        value = list(set(value))
                 # todo:
                 # other select tool
         except Exception as e:
@@ -95,8 +95,8 @@ def start_thread_loop(loop):
 
 
 if __name__ == '__main__':
-    new_loop = asyncio.new_event_loop()
-    loop_thread = Thread(target=start_thread_loop, args=(new_loop,))
+    main_loop = asyncio.new_event_loop()
+    loop_thread = Thread(target=start_thread_loop, args=(main_loop,))
     loop_thread.setDaemon(True)
     loop_thread.start()
 
@@ -107,5 +107,5 @@ if __name__ == '__main__':
             target = json.loads(target)
             print("start %s" % target)
             p = Pipeline(target)
-            asyncio.run_coroutine_threadsafe(p.parser(), new_loop)
-        time.sleep(4)
+            asyncio.run_coroutine_threadsafe(p.parser(), main_loop)
+        time.sleep(3)

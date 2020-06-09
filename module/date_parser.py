@@ -2,6 +2,7 @@
 
 import re
 import chardet
+from functools import reduce
 from datetime import datetime,timedelta
 
 
@@ -124,6 +125,26 @@ class TimeFinder(object):
                         break
         if not res:
             return None
+
+        def func(x, y):
+            date = y[:10]
+            time = y[-8:]
+            if time == "00:00:00" and date not in [i[:10] for i in x]:
+                x.append(y)
+            elif time != "00:00:00":
+                for i in x:
+                    if i[:10] == date and i[-8:] == "00:00:00":
+                        x.remove(i)
+                        break
+
+                if date not in [i[:10] for i in x]:
+                    x.append(y)
+            return x
+
+        # unique
+        res = list(set(res))
+        res = reduce(func, res, [])
+
         return res
 
 
