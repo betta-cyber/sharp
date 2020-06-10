@@ -6,6 +6,7 @@ start:
   type: func
   struct: list
   pattern: "find_time"
+  dom: "#zhongwenzi"
 abstract:
   type: selector
   struct: string
@@ -23,4 +24,3 @@ event_type:
   type: system
   struct: string
   pattern: $event_type
-

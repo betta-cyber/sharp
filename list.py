@@ -4,6 +4,7 @@ import asyncio
 import json
 import requests
 import time
+import re
 from urllib.parse import urlparse
 from threading import Thread
 from pyppeteer import launch
@@ -71,7 +72,6 @@ class Listpipe:
                     self.content = r.json()
                     self.analysis_json(list_obj)
 
-
     async def analysis(self, list_obj):
         self.content = BeautifulSoup(self.content, 'html.parser')
         if list_obj['pattern']['type'] == "list":
@@ -81,6 +81,9 @@ class Listpipe:
         base_url = "%s://%s" % (self.url_info.scheme, self.url_info.netloc)
         for i in list_dom:
             try:
+                text = i.get_text()
+                base_time = re.search(list_obj['basetime']['pattern'], text).group()
+
                 url_dom = i.find('a')
                 url = base_url + url_dom['href']
                 if self.unique_url(url):
@@ -88,7 +91,7 @@ class Listpipe:
                         "type": self.ltype,
                         "url": url,
                         "event_type": list_obj['event_type'],
-                        "basetime": i[list_obj['basetime']['key']][:-2]
+                        "basetime": base_time + " 00:00:00"
                     }
                     redis_c.lpush('target', json.dumps(u))
                     print("push url %s" % url)

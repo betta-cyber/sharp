@@ -46,8 +46,8 @@ class Pipeline:
             if not k or not v:
                 raise Exception('config error')
             self.result[k] = self.get_value(v)
-        print(self.result)
         redis_c.lpush('result', json.dumps(self.result))
+        print(self.result)
 
     def get_value(self, selector):
         try:
