@@ -8,7 +8,7 @@ from utils import redis_c, load_yaml, md5
 if __name__ == '__main__':
 
     while True:
-        for i in ['cert', 'tc260', 'cac', 'djbh']:
+        for i in ['cac', 'tc260', 'cert', 'djbh']:
             data = {'type': i}
             redis_c.lpush("list", json.dumps(data))
             time.sleep(300)

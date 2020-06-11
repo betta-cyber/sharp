@@ -3,12 +3,13 @@
 import asyncio
 import json
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from threading import Thread
 from pyppeteer import launch
 from bs4 import BeautifulSoup
 from utils import redis_c, load_yaml, get_today_zero
 from module.date_parser import TimeFinder
+from module.weight_parser import calculate_weight
 
 
 class Pipeline:
@@ -82,6 +83,10 @@ class Pipeline:
                         else:
                             timefinder = TimeFinder(base_date=get_today_zero())
                         value = timefinder.find_time(text)
+                    if selector['pattern'] == 'get_weight':
+                        dom = self.content.select(selector['dom'])
+                        text = dom[0].get_text()
+                        value = calculate_weight(text)
                 # todo:
                 # other select tool
         except Exception as e:

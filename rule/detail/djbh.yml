@@ -24,3 +24,8 @@ event_type:
   type: system
   struct: string
   pattern: $event_type
+weight:
+  type: func
+  struct: string
+  pattern: "get_weight"
+  dom: "#zhongwenzi"

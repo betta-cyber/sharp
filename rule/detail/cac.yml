@@ -4,7 +4,7 @@ title:
   pattern: "#title"
 start:
   type: func
-  struct: string
+  struct: list
   pattern: "find_time"
   dom: "#center"
 abstract:
@@ -24,3 +24,8 @@ event_type:
   type: system
   struct: string
   pattern: $event_type
+weight:
+  type: func
+  struct: string
+  pattern: "get_weight"
+  dom: "#center"

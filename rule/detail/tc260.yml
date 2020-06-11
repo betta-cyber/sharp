@@ -4,7 +4,7 @@ title:
   pattern: body > div.container.contentBg > div > div.news_end > div.news_end_tit
 start:
   type: func
-  struct: string
+  struct: list
   pattern: "find_time"
   dom: "body > div.container.contentBg > div > div.news_end"
 abstract:
@@ -24,3 +24,8 @@ event_type:
   type: system
   struct: string
   pattern: $event_type
+weight:
+  type: func
+  struct: string
+  pattern: "get_weight"
+  dom: "body > div.container.contentBg > div > div.news_end"
