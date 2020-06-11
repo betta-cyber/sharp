@@ -3,7 +3,9 @@
   event_type: "新闻动态"
   source: "互联网应急中心"
   pattern:
-    type: "table"
-    list_class: "#idData > tbody"
+    type: "list"
+    selector: "body > div.content > div.con_list > ul > li"
+    title_key: "onclick"
+    length: "13:-2"
   basetime:
     pattern: "\\d{4}-\\d{2}-\\d{2}"

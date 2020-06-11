@@ -75,7 +75,10 @@ class Listpipe:
     async def analysis(self, list_obj):
         self.content = BeautifulSoup(self.content, 'html.parser')
         if list_obj['pattern']['type'] == "list":
-            list_dom = self.content.find_all('li', class_=list_obj['pattern']['class'])
+            if list_obj['pattern'].get('class'):
+                list_dom = self.content.find_all('li', class_=list_obj['pattern']['class'])
+            elif list_obj['pattern'].get('selector'):
+                list_dom = self.content.select(list_obj['pattern']['selector'])
         if list_obj['pattern']['type'] == "table":
             list_dom = self.content.find_all('tr')
         base_url = "%s://%s" % (self.url_info.scheme, self.url_info.netloc)
@@ -85,8 +88,18 @@ class Listpipe:
                 base_time = re.search(list_obj['basetime']['pattern'], text).group()
 
                 url_dom = i.find('a')
-                url = base_url + url_dom['href']
-                if self.unique_url(url):
+                try:
+                    u = url_dom[list_obj['pattern']['title_key']]
+                    try:
+                        length = list_obj['pattern']['length'].split(":")
+                        u = u[int(length[0]):int(length[1])]
+                    except Exception:
+                        pass
+                except Exception:
+                    # default href
+                    u = url_dom['href']
+                url = base_url + u
+                if self.unique_url(str(url)):
                     u = {
                         "type": self.ltype,
                         "url": url,
@@ -125,10 +138,13 @@ if __name__ == '__main__':
     loop_thread.setDaemon(True)
     loop_thread.start()
 
+    print('-------init list-------')
+
     while True:
         target = redis_c.rpop("list")
         if target:
             target = json.loads(target)
+            print(target)
             p = Listpipe(target)
             asyncio.run_coroutine_threadsafe(p.parser(), new_loop)
             time.sleep(30)

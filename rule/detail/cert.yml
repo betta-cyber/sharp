@@ -1,0 +1,26 @@
+title:
+  type: selector
+  struct: string
+  pattern: "body > div.content > div.con_list1 > ul > h2 > font"
+start:
+  type: func
+  struct: string
+  pattern: "find_time"
+  dom: "body > div.content > div.con_list1"
+abstract:
+  type: selector
+  struct: string
+  length: 200
+  pattern: "#Content"
+raw_url:
+  type: system
+  struct: string
+  pattern: $url
+source:
+  type: static
+  struct: string
+  pattern: "互联网应急中心"
+event_type:
+  type: system
+  struct: string
+  pattern: $event_type
