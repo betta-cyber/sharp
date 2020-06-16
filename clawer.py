@@ -2,14 +2,17 @@
 
 import time
 import json
+from apscheduler.schedulers.blocking import BlockingScheduler
 from utils import redis_c, load_yaml, md5
 
 
-if __name__ == '__main__':
+def clawer():
+    for i in ['cac', 'tc260', 'cert', 'djbh']:
+        data = {'type': i}
+        redis_c.lpush("list", json.dumps(data))
+        time.sleep(300)
 
-    while True:
-        for i in ['cac', 'tc260', 'cert', 'djbh']:
-            data = {'type': i}
-            redis_c.lpush("list", json.dumps(data))
-            time.sleep(300)
-        time.sleep(7200)
+
+if __name__ == '__main__':
+    sched = BlockingScheduler()
+    sched.add_job(clawer, 'cron', hour=0)

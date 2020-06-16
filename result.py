@@ -19,7 +19,6 @@ class Result:
 
     async def process(self):
         data = self.data
-        weight = 5
         for i in data['start']:
             data_hash = md5(data['raw_url'] + str(i))
             print(data_hash)
@@ -27,7 +26,7 @@ class Result:
                 ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % \
                 (data['title'].strip(), i, data['abstract'].strip(), \
                  data['source'], data['event_type'], data['raw_url'], \
-                 weight, data_hash)
+                 data['weight'], data_hash)
             print(sql)
             a = self.db.execute(sql)
             print(a)

@@ -1,0 +1,11 @@
+token: "taken_for_user"
+page: page
+total: total
+-
+  url: "http://www.beian.gov.cn/portal/recordIssue"
+  event_type: "新闻动态"
+  source: "安全管理服务平台"
+  pattern:
+    type: "list"
+  basetime:
+    pattern: "\\d{4}-\\d{2}-\\d{2}"

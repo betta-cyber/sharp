@@ -51,6 +51,8 @@ class Listpipe:
     async def parser(self):
         # need get page and pagesize
         # for loop
+        if list_obj.get('token'):
+            pass
         for list_obj in self.list_obj:
             if not list_obj['url'].startswith('$'):
                 browser = await launch(
