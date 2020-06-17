@@ -90,7 +90,7 @@ class Pipeline:
                 # todo:
                 # other select tool
         except Exception as e:
-            print(str(e))
+            print("get value error %s, key is %s" % (str(e), selector))
         # filter length
         try:
             value = value[:selector['length']]

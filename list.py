@@ -7,7 +7,7 @@ import time
 import re
 from urllib.parse import urlparse
 from threading import Thread
-from pyppeteer import launch
+from pyppeteer import launch, errors
 from bs4 import BeautifulSoup
 from utils import redis_c, load_yaml, md5
 
@@ -48,11 +48,51 @@ class Listpipe:
             return True
         return False
 
+    async def intercept_request(self, req):
+        """请求过滤"""
+        if req.resourceType in ['image', 'media', 'eventsource', 'websocket']:
+            await req.abort()
+        else:
+            await req.continue_()
+
+    async def goto(self, page, url):
+        while True:
+            try:
+                await page.goto(url, {
+                    'timeout': 0,
+                    'waitUntil': 'networkidle0'
+                })
+                break
+            except (errors.NetworkError, errors.PageError) as ex:
+                if 'net::' in str(ex):
+                    await asyncio.sleep(10)
+                else:
+                    raise
+
     async def parser(self):
         # need get page and pagesize
         # for loop
-        if list_obj.get('token'):
-            pass
+        # if self.list_obj.get('token'):
+            # browser = await launch(
+                # headless=True,
+                # args=['--disable-infobars', '--no-sandbox']
+            # )
+            # page = await browser.newPage()
+            # await page.setRequestInterception(True)
+            # page.on('request', self.intercept_request)
+            # await self.goto(page, self.list_obj['base_url'])
+            # await asyncio.sleep(2)
+            # # await page.goto(self.list_obj['base_url'])
+            # try:
+                # token = await page.evaluate('''() => {
+                    # return {
+                        # token: %s
+                    # }
+                # }''' % self.list_obj['token'])
+            # except Exception as e:
+                # print(e)
+            # print(token)
+
         for list_obj in self.list_obj:
             if not list_obj['url'].startswith('$'):
                 browser = await launch(
@@ -84,6 +124,7 @@ class Listpipe:
         if list_obj['pattern']['type'] == "table":
             list_dom = self.content.find_all('tr')
         base_url = "%s://%s" % (self.url_info.scheme, self.url_info.netloc)
+
         for i in list_dom:
             try:
                 text = i.get_text()
@@ -92,14 +133,20 @@ class Listpipe:
                 url_dom = i.find('a')
                 try:
                     u = url_dom[list_obj['pattern']['title_key']]
-                    try:
-                        length = list_obj['pattern']['length'].split(":")
-                        u = u[int(length[0]):int(length[1])]
-                    except Exception:
-                        pass
                 except Exception:
                     # default href
                     u = url_dom['href']
+                try:
+                    length = list_obj['pattern']['length'].split(":")
+                    if length[0] and length[1]:
+                        u = u[int(length[0]):int(length[1])]
+                    elif length[0] and not length[1]:
+                        u = u[int(length[0]):]
+                    elif not length[0] and length[1]:
+                        u = u[:int(length[1])]
+                except Exception:
+                    pass
+
                 url = base_url + u
                 if self.unique_url(str(url)):
                     u = {

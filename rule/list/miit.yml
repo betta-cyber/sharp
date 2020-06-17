@@ -1,5 +1,11 @@
-url: "http://www.miit.gov.cn/n1146285/n1146352/n3054355/n3057724/n3057728/index.html"
-event_type: "新闻动态"
-source: "工信部"
-pattern:
-  list_class: "list_title_news"
+-
+  url: "http://www.miit.gov.cn/n1146285/n1146352/n3054355/n3057724/n3057728/index.html"
+  event_type: "新闻动态"
+  source: "工信部"
+  pattern:
+    type: "list"
+    selector: "#comp_1274678 > div > ul > li"
+    length: "14:"
+  basetime:
+    pattern: "\\d{4}-\\d{2}-\\d{2}"
+

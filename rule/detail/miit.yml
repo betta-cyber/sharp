@@ -1,0 +1,31 @@
+title:
+  type: selector
+  struct: string
+  pattern: "#con_title"
+start:
+  type: func
+  struct: list
+  pattern: "find_time"
+  dom: "body > div.w980.center.cmain"
+abstract:
+  type: selector
+  struct: string
+  length: 200
+  pattern: "#con_con"
+raw_url:
+  type: system
+  struct: string
+  pattern: $url
+source:
+  type: static
+  struct: string
+  pattern: "工信部"
+event_type:
+  type: system
+  struct: string
+  pattern: $event_type
+weight:
+  type: func
+  struct: string
+  pattern: "get_weight"
+  dom: "#con_con"

@@ -1,6 +1,8 @@
 token: "taken_for_user"
+base_url: "http://www.beian.gov.cn"
 page: page
 total: total
+data:
 -
   url: "http://www.beian.gov.cn/portal/recordIssue"
   event_type: "新闻动态"
