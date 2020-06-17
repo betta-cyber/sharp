@@ -7,7 +7,7 @@ from utils import redis_c, load_yaml, md5
 
 
 def clawer():
-    for i in ['cac', 'tc260', 'cert', 'djbh']:
+    for i in ['miit', 'cac', 'tc260', 'cert', 'djbh']:
         data = {'type': i}
         redis_c.lpush("list", json.dumps(data))
         time.sleep(300)
@@ -16,3 +16,5 @@ def clawer():
 if __name__ == '__main__':
     sched = BlockingScheduler()
     sched.add_job(clawer, 'cron', hour=0)
+
+    sched.start()
