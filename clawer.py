@@ -13,8 +13,17 @@ def clawer():
         time.sleep(300)
 
 
-if __name__ == '__main__':
-    sched = BlockingScheduler()
-    sched.add_job(clawer, 'cron', hour=0)
+def intelligence_clawer():
+    for i in ['anquanke']:
+        data = {'type': i, 'class': 'intelligence'}
+        redis_c.lpush("list", json.dumps(data))
+        time.sleep(300)
 
-    sched.start()
+
+if __name__ == '__main__':
+    # sched = BlockingScheduler()
+    # sched.add_job(clawer, 'cron', hour=0)
+
+    # sched.start()
+
+    intelligence_clawer()

@@ -1,0 +1,20 @@
+title:
+  type: system
+  struct: string
+  pattern: $title
+publish_time:
+  type: system
+  struct: string
+  pattern: $publish_time
+summary:
+  type: system
+  struct: string
+  pattern: $summary
+raw_url:
+  type: system
+  struct: string
+  pattern: $url
+source:
+  type: static
+  struct: string
+  pattern: "安全客"

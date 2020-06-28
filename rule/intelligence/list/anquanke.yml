@@ -1,0 +1,10 @@
+-
+  url: $requests
+  data:
+    url: "https://api.anquanke.com/data/v1/posts?size=200&page=1"
+  source: "安全客"
+  basetime:
+    key: "date"
+  pattern:
+    type: "json"
+    key: "https://www.anquanke.com/post/id/" + $id

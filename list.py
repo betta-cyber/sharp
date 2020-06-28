@@ -33,7 +33,8 @@ class Listpipe:
 
     def __init__(self, target):
         self.ltype = target['type']
-        self.list_obj = load_yaml('rule/list/%s.yml' % target['type'])
+        self.lclass = target['class']
+        self.list_obj = load_yaml('rule/%s/list/%s.yml' % (target['class'], target['type']))
         self.result = {}
         self.url_info = None
         self.content = ""

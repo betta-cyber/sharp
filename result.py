@@ -17,19 +17,30 @@ class Result:
     def save_db(self):
         pass
 
+    # async def process(self):
+        # data = self.data
+        # for i in data['start']:
+            # data_hash = md5(data['raw_url'] + str(i))
+            # print(data_hash)
+            # sql = "insert into sec_event (title, start, abstract, source, event_type, raw_url, weight, hash) values \
+                # ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % \
+                # (data['title'].strip(), i, data['abstract'].strip(), \
+                 # data['source'], data['event_type'], data['raw_url'], \
+                 # data['weight'], data_hash)
+            # print(sql)
+            # a = self.db.execute(sql)
+            # print(a)
+
     async def process(self):
         data = self.data
-        for i in data['start']:
-            data_hash = md5(data['raw_url'] + str(i))
-            print(data_hash)
-            sql = "insert into sec_event (title, start, abstract, source, event_type, raw_url, weight, hash) values \
-                ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % \
-                (data['title'].strip(), i, data['abstract'].strip(), \
-                 data['source'], data['event_type'], data['raw_url'], \
-                 data['weight'], data_hash)
-            print(sql)
-            a = self.db.execute(sql)
-            print(a)
+
+        sql = "insert into intelligence (title, summary, raw_url, source, publish_time) values \
+            ('%s', '%s', '%s', '%s', '%s');" % \
+            (data['title'].strip(), data['summary'].strip(), \
+             data['raw_url'], data['source'], data['publish_time'])
+        print(sql)
+        a = self.db.execute(sql)
+        print(a)
 
 
 def start_thread_loop(loop):
