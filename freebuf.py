@@ -2,10 +2,8 @@
 
 
 import re
-import os
-import urllib
 import requests
-from multiprocessing import Pool
+from bs4 import BeautifulSoup
 
 
 subject_dict = {u'漏洞':'http://www.freebuf.com/vuls', u'安全工具':'http://www.freebuf.com/sectool',
@@ -17,39 +15,33 @@ subject_dict = {u'漏洞':'http://www.freebuf.com/vuls', u'安全工具':'http:/
 
 
 def spider(filename, url):
-    if os.path.isfile(filename + ".html"):
-        os.remove(filename + ".html")
-    with open(filename + ".html", 'a') as f:
-        page = 0
-        error_couter = 0
-        while True:
-            page += 1
-            try:
-                html = requests.get(url + '/page/' + str(page))
-                code = html.status_code
-                if code == 404:
-                    error_couter += 1
-                    if error_couter == 1:
-                        print("Subject %s may only have %s pages." % (filename, str(page - 1)))
-                    if error_couter <= 3:
-                        print("Retrying %s: 404 not Found!" % str(error_couter))
-                        continue
-                    else:
-                        print("Subject %s finished!" % filename)
-                        print("#################################")
-                        break
+    page = 0
+    error_couter = 0
+    while True:
+        page += 1
+        try:
+            html = requests.get(url + '/page/' + str(page))
+            code = html.status_code
+            if code == 404:
+                error_couter += 1
+                if error_couter == 1:
+                    print("Subject %s may only have %s pages." % (filename, str(page - 1)))
+                if error_couter <= 3:
+                    print("Retrying %s: 404 not Found!" % str(error_couter))
+                    continue
                 else:
-                    print(u"Parsing page: " + str(page))
-                    if page == 1:
-                        site = re.findall('([\s\S]*)      </div>\n      <div class="news-more" id="pagination">',html.text,re.S)
-                    else:
-                        site = re.findall('<div id="timeline" class="news-detial">([\s\S]*?)      </div>\n      <div class="news-more" id="pagination">',html.text,re.S)
-                    for each in site:
-                        print(each)
-                        f.write(urllib.unquote(each.encode('utf-8')))
-            except Exception as e:
-                pass
-        f.close()
+                    print("Subject %s finished!" % filename)
+                    print("#################################")
+                    break
+            else:
+                print(u"Parsing page: " + str(page))
+                soup = BeautifulSoup(html.text, 'html.parser')
+                site = soup.select('#timeline > div')
+                for each in site:
+                    print(site)
+        except Exception as e:
+            print(e)
+            pass
 
 
 def main():
