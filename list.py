@@ -4,12 +4,16 @@ import asyncio
 import json
 import requests
 import time
+import logging
 import re
 from urllib.parse import urlparse
 from threading import Thread
 from pyppeteer import launch, errors
 from bs4 import BeautifulSoup
 from utils import redis_c, load_yaml, md5
+
+logging.basicConfig(filename='debug.log', level=logging.DEBUG)
+
 
 COOKIES = {
     'JSESSIONID': 'FFBA83C59236EEF7467EF304848A7BF3.TomcatA',
@@ -35,6 +39,7 @@ class Listpipe:
         self.ltype = target['type']
         self.lclass = target['class']
         self.list_obj = load_yaml('rule/%s/list/%s.yml' % (target['class'], target['type']))
+        self.current_obj = None
         self.result = {}
         self.url_info = None
         self.content = ""
@@ -71,49 +76,42 @@ class Listpipe:
                     raise
 
     async def parser(self):
-        # need get page and pagesize
-        # for loop
-        # if self.list_obj.get('token'):
-            # browser = await launch(
-                # headless=True,
-                # args=['--disable-infobars', '--no-sandbox']
-            # )
-            # page = await browser.newPage()
-            # await page.setRequestInterception(True)
-            # page.on('request', self.intercept_request)
-            # await self.goto(page, self.list_obj['base_url'])
-            # await asyncio.sleep(2)
-            # # await page.goto(self.list_obj['base_url'])
-            # try:
-                # token = await page.evaluate('''() => {
-                    # return {
-                        # token: %s
-                    # }
-                # }''' % self.list_obj['token'])
-            # except Exception as e:
-                # print(e)
-            # print(token)
+        logging.info('-- START PARSER --')
+        logging.debug(self.list_obj)
 
-        for list_obj in self.list_obj:
-            if not list_obj['url'].startswith('$'):
-                browser = await launch(
-                    headless=True,
-                    args=['--disable-infobars', '--no-sandbox']
-                )
-                page = await browser.newPage()
-                await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                                '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
-                self.url_info = urlparse(list_obj['url'])
-                await page.goto(list_obj['url'])
-                self.content = await page.content()
-                await self.analysis(list_obj)
-                await browser.close()
-            else:
+        if self.lclass == "intelligence":
+            for list_obj in self.list_obj:
                 if list_obj['url'] == "$requests":
                     data = list_obj['data']
-                    r = requests.post(data['url'], headers=HEADERS, cookies=COOKIES, data=data['data'], verify=False)
-                    self.content = r.json()
-                    self.analysis_json(list_obj)
+                    r = requests.get(data['url'])
+                    if list_obj['data-format'] == "json":
+                        self.content = r.json()
+                        self.analysis_json(list_obj)
+                    if list_obj['data-format'] == "html":
+                        soup = BeautifulSoup(r.text, 'html.parser')
+                        self.content = soup
+                        self.analysis_html(list_obj)
+        elif self.lclass == "event":
+            for list_obj in self.list_obj:
+                if not list_obj['url'].startswith('$'):
+                    browser = await launch(
+                        headless=True,
+                        args=['--disable-infobars', '--no-sandbox']
+                    )
+                    page = await browser.newPage()
+                    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                    '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
+                    self.url_info = urlparse(list_obj['url'])
+                    await page.goto(list_obj['url'])
+                    self.content = await page.content()
+                    await self.analysis(list_obj)
+                    await browser.close()
+                else:
+                    if list_obj['url'] == "$requests":
+                        data = list_obj['data']
+                        r = requests.post(data['url'], headers=HEADERS, cookies=COOKIES, data=data['data'], verify=False)
+                        self.content = r.json()
+                        self.analysis_json(list_obj)
 
     async def analysis(self, list_obj):
         self.content = BeautifulSoup(self.content, 'html.parser')
@@ -162,19 +160,138 @@ class Listpipe:
                 pass
 
     def analysis_json(self, list_obj):
-        for i in self.content['list']:
-            url = i[list_obj['pattern']['key']]
-            if self.unique_url(url):
+        logging.info('-- analysis json --')
+        if self.lclass == "intelligence":
+            for i in self.content[list_obj['pattern']['selector']]:
                 u = {
-                    "type": self.ltype,
-                    "url": url,
-                    "event_type": list_obj['event_type'],
-                    "basetime": i[list_obj['basetime']['key']][:-2]
+                    "class": self.lclass,
+                    "raw_url": self.get_value(i, list_obj['response']['raw_url']),
+                    "title": self.get_value(i, list_obj['response']['title']).strip(),
+                    "summary": self.get_value(i, list_obj['response']['summary']),
+                    "publish_time": self.get_value(i, list_obj['response']['publish_time']),
+                    "source": self.get_value(i, list_obj['response']['source'])
                 }
-                redis_c.lpush('target', json.dumps(u))
-                print("push url %s" % url)
+                url = u['raw_url']
+                uhash = str(md5(url))
+                if self.unique_url(url):
+                    u["rhash"] = uhash
+                    redis_c.lpush('result', json.dumps(u))
+                    print("push url %s" % url)
+
+        elif self.lclass == "event":
+            for i in self.content['list']:
+                url = i[list_obj['pattern']['key']]
+                if self.unique_url(url):
+                    u = {
+                        "type": self.ltype,
+                        "url": url,
+                        "event_type": list_obj['event_type'],
+                        "basetime": i[list_obj['basetime']['key']][:-2]
+                    }
+                    redis_c.lpush('target', json.dumps(u))
+                    print("push url %s" % url)
+                else:
+                    print("exist url %s" % url)
+
+    def analysis_html(self, list_obj):
+        logging.info('-- analysis html --')
+        if self.lclass == "intelligence":
+            lists = self.content.select(list_obj['pattern']['selector'])
+            self.current_obj = list_obj
+            for i in lists:
+                # url is the most import thing
+                u = {
+                    "class": self.lclass,
+                    "raw_url": self.get_value(i, list_obj['response']['raw_url']),
+                    "title": self.get_value(i, list_obj['response']['title']).strip(),
+                    "summary": self.get_value(i, list_obj['response']['summary']),
+                    "publish_time": self.get_value(i, list_obj['response']['publish_time']),
+                    "source": self.get_value(i, list_obj['response']['source'])
+                }
+                url = u['raw_url']
+                uhash = str(md5(url))
+                if self.unique_url(url):
+                    u["rhash"] = uhash
+                    redis_c.lpush('result', json.dumps(u))
+                    print("push url %s" % url)
+
+    def get_value(self, data, selector):
+        try:
+            if selector['type'] == "static":
+                return selector['pattern']
             else:
-                print("exist url %s" % url)
+                if selector['type'] == "system":
+                    if selector['pattern'].startswith('$'):
+                        if selector['pattern'] == "$url":
+                            value = self.url
+                        if selector['pattern'] == "$event_type":
+                            value = self.event_type
+                    else:
+                        return ''
+                if selector['type'] == "selector":
+                    if selector['struct'] == "string":
+                        dom = data.select(selector['pattern'])
+                        value = dom[0].get_text()
+                    if selector['struct'] == 'list':
+                        # dom = self.content.select(selector['pattern'])
+                        # value = dom[0].get_text()
+                        # return value
+                        pass
+                if selector['type'] == "tag":
+                    dom = data.find(selector['pattern'])
+                    value = dom.get_text()
+                if selector['type'] == "key":
+                    value = data[selector['pattern']]
+                if selector['type'] == "hybrid":
+                    value = selector['pattern']
+                    matchs = re.findall(r'{(.*)}', selector['pattern'])
+                    need_replace = {}
+                    for i in matchs:
+                        if '.' in i:
+                            k = i.split('.')
+                            dom = self.get_dom(data, k[0])
+                            data = dom[k[1]]
+                        need_replace[i] = data
+                    for key in need_replace.keys():
+                        s = "{%s}" % key
+                        value = value.replace(s, str(need_replace[key]))
+                if selector['type'] == "hybrid-json":
+                    value = self.format_url(data, selector['pattern'])
+                if selector['type'] == "xpath":
+                    pass
+                if selector['type'] == "func":
+                    if selector['pattern'] == 'filter_time':
+                        time_pattern = "\\d{4}-\\d{2}-\\d{2}"
+                        value = re.search(time_pattern, data.get_text()).group()
+                    if selector['pattern'] == 'get_text':
+                        value = data.get_text().strip()
+                # todo:
+                # other select tool
+        except Exception as e:
+            print("get value error %s, key is %s" % (str(e), selector))
+        # filter length
+        try:
+            value = value[:selector['length']]
+        except Exception:
+            pass
+        return value
+
+    def get_dom(self, data, key):
+        selector = self.current_obj['response'][key]
+        if selector['type'] == "tag":
+            dom = data.find(selector['pattern'])
+            return dom
+
+    def format_url(self, data, pattern):
+        # print(data, pattern)
+        matchs = re.findall(r'{(.*)}', pattern)
+        need_replace = {}
+        for i in matchs:
+            need_replace[i] = data[i]
+        for k in need_replace.keys():
+            s = "{%s}" % k
+            pattern = pattern.replace(s, str(need_replace[k]))
+        return pattern
 
 
 def start_thread_loop(loop):

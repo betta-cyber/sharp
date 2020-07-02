@@ -2,8 +2,8 @@
   url: $requests
   data-format: "json"
   data:
-    url: "https://api.anquanke.com/data/v1/posts?size=200&page=1"
-  source: "安全客"
+    url: "http://wechat.doonsec.com/tags/?page=1&cat_id=3&_=1593596767797"
+  source: "doonsec"
   pattern:
     type: "list"
     selector: "data"
@@ -13,19 +13,21 @@
       struct: string
       pattern: "title"
     raw_url:
-      type: hybrid-json
+      type: key
       struct: string
-      pattern: "https://www.anquanke.com/post/id/{id}"
+      pattern: 'url'
     summary:
       type: key
       struct: string
-      pattern: "desc"
+      pattern: "digest"
     source:
-      type: static
+      type: key
       struct: string
-      pattern: "安全客"
+      pattern: "account_name"
     publish_time:
       type: key
       struct: string
-      pattern: "date"
+      pattern: "publish_time"
+
+
 

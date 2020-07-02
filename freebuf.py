@@ -2,8 +2,11 @@
 
 
 import re
+import time
 import requests
 from bs4 import BeautifulSoup
+from utils import redis_c, load_yaml, DBHelper, md5
+db = DBHelper()
 
 
 subject_dict = {u'漏洞':'http://www.freebuf.com/vuls', u'安全工具':'http://www.freebuf.com/sectool',
@@ -20,6 +23,7 @@ def spider(filename, url):
     while True:
         page += 1
         try:
+            print(url)
             html = requests.get(url + '/page/' + str(page))
             code = html.status_code
             if code == 404:
@@ -38,11 +42,24 @@ def spider(filename, url):
                 soup = BeautifulSoup(html.text, 'html.parser')
                 site = soup.select('#timeline > div')
                 for each in site:
-                    print(site)
+                    summary = each.find('dd', class_='text').get_text().strip()
+                    title = each.find('dt').get_text().strip()
+                    raw_url_dom = each.find('a')
+                    raw_url = raw_url_dom.get('href')
+                    print(raw_url)
+                    publish_time = each.find('span', class_='time').get_text().strip()
+                    rhash = md5(raw_url)
+                    sql = "insert into intelligence (title, summary, raw_url, source, publish_time, rhash) values \
+                        ('%s', '%s', '%s', '%s', '%s', '%s');" % \
+                        (title, summary, \
+                        raw_url, "freebuf", publish_time, rhash)
+                    print(sql)
+                    a = db.execute(sql)
+                    print(a)
         except Exception as e:
-            print(e)
-            pass
+            print(str(e))
 
+        time.sleep(60)
 
 def main():
     for key, value in subject_dict.items():

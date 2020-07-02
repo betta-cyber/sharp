@@ -1,0 +1,33 @@
+-
+  url: $requests
+  data-format: "html"
+  data:
+    url: "https://www.cnvd.org.cn/webinfo/list?type=1"
+  source: "cnvd"
+  pattern:
+    type: "list"
+    selector: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > table > tbody > tr"
+  response:
+    title:
+      type: tag
+      struct: string
+      pattern: "a"
+    raw_url:
+      type: hybrid
+      struct: string
+      pattern: 'https://www.cnvd.org.cn{title.href}'
+    summary:
+      type: func
+      struct: string
+      pattern: "get_text"
+    source:
+      type: static
+      struct: string
+      pattern: "cnvd"
+    publish_time:
+      type: func
+      struct: string
+      pattern: "filter_time"
+
+
+
