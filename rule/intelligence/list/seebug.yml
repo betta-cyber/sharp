@@ -1,0 +1,26 @@
+-
+  url: "https://paper.seebug.org/rss"
+  data-format: "rss"
+  pattern:
+    type: "list"
+  response:
+    title:
+      type: key
+      struct: string
+      pattern: "title"
+    raw_url:
+      type: key
+      struct: string
+      pattern: 'link'
+    summary:
+      type: key
+      struct: string
+      pattern: "summary"
+    source:
+      type: static
+      struct: string
+      pattern: "seebug"
+    publish_time:
+      type: key
+      struct: string
+      pattern: "published_parsed"

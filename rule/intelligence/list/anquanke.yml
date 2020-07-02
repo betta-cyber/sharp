@@ -28,4 +28,3 @@
       type: key
       struct: string
       pattern: "date"
-

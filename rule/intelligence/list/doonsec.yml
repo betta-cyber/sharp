@@ -28,6 +28,3 @@
       type: key
       struct: string
       pattern: "publish_time"
-
-
-

@@ -5,6 +5,7 @@ import json
 import requests
 import time
 import logging
+import feedparser
 import re
 from urllib.parse import urlparse
 from threading import Thread
@@ -91,6 +92,11 @@ class Listpipe:
                         soup = BeautifulSoup(r.text, 'html.parser')
                         self.content = soup
                         self.analysis_html(list_obj)
+                else:
+                    if list_obj['data-format'] == "rss":
+                        rss = feedparser.parse(list_obj['url'])
+                        self.content = rss.entries
+                        self.analysis_rss(list_obj)
         elif self.lclass == "event":
             for list_obj in self.list_obj:
                 if not list_obj['url'].startswith('$'):
@@ -206,6 +212,25 @@ class Listpipe:
                     "title": self.get_value(i, list_obj['response']['title']).strip(),
                     "summary": self.get_value(i, list_obj['response']['summary']),
                     "publish_time": self.get_value(i, list_obj['response']['publish_time']),
+                    "source": self.get_value(i, list_obj['response']['source'])
+                }
+                url = u['raw_url']
+                uhash = str(md5(url))
+                if self.unique_url(url):
+                    u["rhash"] = uhash
+                    redis_c.lpush('result', json.dumps(u))
+                    print("push url %s" % url)
+
+    def analysis_rss(self, list_obj):
+        logging.info('-- analysis rss --')
+        if self.lclass == "intelligence":
+            for i in self.content:
+                u = {
+                    "class": self.lclass,
+                    "raw_url": self.get_value(i, list_obj['response']['raw_url']),
+                    "title": self.get_value(i, list_obj['response']['title']).strip(),
+                    "summary": self.get_value(i, list_obj['response']['summary']),
+                    "publish_time": time.strftime("%Y-%m-%d %H:%M", self.get_value(i, list_obj['response']['publish_time'])),
                     "source": self.get_value(i, list_obj['response']['source'])
                 }
                 url = u['raw_url']
