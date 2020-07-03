@@ -3,6 +3,7 @@
   data-format: "rss"
   pattern:
     type: "list"
+    selector: "#includeList > table > tbody > tr"
   response:
     title:
       type: key

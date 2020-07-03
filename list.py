@@ -13,7 +13,7 @@ from pyppeteer import launch, errors
 from bs4 import BeautifulSoup
 from utils import redis_c, load_yaml, md5
 
-logging.basicConfig(filename='debug.log', level=logging.DEBUG)
+logging.basicConfig(filename='debug.log', level=logging.INFO)
 
 
 COOKIES = {
@@ -82,21 +82,37 @@ class Listpipe:
 
         if self.lclass == "intelligence":
             for list_obj in self.list_obj:
-                if list_obj['url'] == "$requests":
-                    data = list_obj['data']
-                    r = requests.get(data['url'])
-                    if list_obj['data-format'] == "json":
-                        self.content = r.json()
-                        self.analysis_json(list_obj)
+                if not list_obj['url'].startswith('$'):
                     if list_obj['data-format'] == "html":
-                        soup = BeautifulSoup(r.text, 'html.parser')
-                        self.content = soup
+                        browser = await launch(
+                            headless=True,
+                            args=['--disable-infobars', '--no-sandbox']
+                        )
+                        page = await browser.newPage()
+                        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                        '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
+                        self.url_info = urlparse(list_obj['url'])
+                        await page.goto(list_obj['url'])
+                        self.content = await page.content()
+                        self.content = BeautifulSoup(self.content, 'html.parser')
+                        await browser.close()
                         self.analysis_html(list_obj)
-                else:
-                    if list_obj['data-format'] == "rss":
+                    elif list_obj['data-format'] == "rss":
                         rss = feedparser.parse(list_obj['url'])
                         self.content = rss.entries
                         self.analysis_rss(list_obj)
+                else:
+                    if list_obj['url'] == "$requests":
+                        data = list_obj['data']
+                        r = requests.get(data['url'])
+                        if list_obj['data-format'] == "json":
+                            self.content = r.json()
+                            self.analysis_json(list_obj)
+                        if list_obj['data-format'] == "html":
+                            soup = BeautifulSoup(r.text, 'html.parser')
+                            self.content = soup
+                            self.analysis_html(list_obj)
+
         elif self.lclass == "event":
             for list_obj in self.list_obj:
                 if not list_obj['url'].startswith('$'):
@@ -258,10 +274,11 @@ class Listpipe:
                         dom = data.select(selector['pattern'])
                         value = dom[0].get_text()
                     if selector['struct'] == 'list':
-                        # dom = self.content.select(selector['pattern'])
-                        # value = dom[0].get_text()
-                        # return value
                         pass
+                if selector['type'] == "find_by_class":
+                    d = selector['pattern'].split('|')
+                    dom = data.find(d[0], class_=d[1])
+                    value = dom.get_text()
                 if selector['type'] == "tag":
                     dom = data.find(selector['pattern'])
                     value = dom.get_text()
@@ -305,6 +322,10 @@ class Listpipe:
         selector = self.current_obj['response'][key]
         if selector['type'] == "tag":
             dom = data.find(selector['pattern'])
+            return dom
+        if selector['type'] == "find_by_class":
+            d = selector['pattern'].split('|')
+            dom = data.find(d[0], class_=d[1])
             return dom
 
     def format_url(self, data, pattern):

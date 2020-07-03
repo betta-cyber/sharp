@@ -14,7 +14,7 @@ def clawer():
 
 
 def intelligence_clawer():
-    for i in ['seebug']:
+    for i in ['xz']:
         data = {'type': i, 'class': 'intelligence'}
         redis_c.lpush("list", json.dumps(data))
         time.sleep(300)
