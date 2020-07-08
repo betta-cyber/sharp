@@ -8,7 +8,7 @@ from datetime import datetime
 from threading import Thread
 from utils import redis_c, load_yaml, DBHelper, md5
 
-logging.basicConfig(filename='debug.log', level=logging.DEBUG)
+logging.basicConfig(filename='debug.log', level=logging.INFO)
 
 
 class Result:

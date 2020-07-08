@@ -13,7 +13,7 @@ from pyppeteer import launch, errors
 from bs4 import BeautifulSoup
 from utils import redis_c, load_yaml, md5
 
-logging.basicConfig(filename='debug.log', level=logging.INFO)
+logging.basicConfig(filename='debug.log', level=logging.DEBUG)
 
 
 COOKIES = {
@@ -28,8 +28,7 @@ HEADERS = {
     'X-Requested-With': 'XMLHttpRequest',
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36',
     'Content-Type': 'application/x-www-form-urlencoded',
-    'Origin': 'http://www.cac.gov.cn',
-    'Referer': 'http://www.cac.gov.cn/wlaq/More.htm',
+    'Origin': 'http://www.cac.gov.cn', 'Referer': 'http://www.cac.gov.cn/wlaq/More.htm',
     'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6',
 }
 
@@ -77,7 +76,7 @@ class Listpipe:
                     raise
 
     async def parser(self):
-        logging.info('-- START PARSER --')
+        logging.info('-- START PARSER LIST --')
         logging.debug(self.list_obj)
 
         if self.lclass == "intelligence":
@@ -114,6 +113,7 @@ class Listpipe:
                             self.analysis_html(list_obj)
 
         elif self.lclass == "event":
+            logging.info(' -- event -----')
             for list_obj in self.list_obj:
                 if not list_obj['url'].startswith('$'):
                     browser = await launch(
@@ -125,7 +125,9 @@ class Listpipe:
                                     '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
                     self.url_info = urlparse(list_obj['url'])
                     await page.goto(list_obj['url'])
+                    logging.info(' -- finish get url -----')
                     self.content = await page.content()
+                    print(self.content)
                     await self.analysis(list_obj)
                     await browser.close()
                 else:
@@ -136,6 +138,7 @@ class Listpipe:
                         self.analysis_json(list_obj)
 
     async def analysis(self, list_obj):
+        logging.info('-- analysis event --')
         self.content = BeautifulSoup(self.content, 'html.parser')
         if list_obj['pattern']['type'] == "list":
             if list_obj['pattern'].get('class'):
@@ -169,13 +172,15 @@ class Listpipe:
                     pass
 
                 url = base_url + u
+                u = {
+                    "class": self.lclass,
+                    "type": self.ltype,
+                    "url": url,
+                    "event_type": list_obj['event_type'],
+                    "basetime": base_time + " 00:00:00"
+                }
+                print(u)
                 if self.unique_url(str(url)):
-                    u = {
-                        "type": self.ltype,
-                        "url": url,
-                        "event_type": list_obj['event_type'],
-                        "basetime": base_time + " 00:00:00"
-                    }
                     redis_c.lpush('target', json.dumps(u))
                     print("push url %s" % url)
             except Exception:
@@ -205,6 +210,7 @@ class Listpipe:
                 url = i[list_obj['pattern']['key']]
                 if self.unique_url(url):
                     u = {
+                        "class": self.lclass,
                         "type": self.ltype,
                         "url": url,
                         "event_type": list_obj['event_type'],
