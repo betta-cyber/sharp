@@ -14,7 +14,8 @@ logging.basicConfig(filename='debug.log', level=logging.INFO)
 class Result:
 
     def __init__(self, data):
-        self.db = DBHelper()
+        self.web_db = DBHelper(db="sec_web")
+        self.eye_db = DBHelper(db="sec_eye")
         self.data = data
 
     def save_db(self):
@@ -28,7 +29,7 @@ class Result:
                 (data['title'].strip(), data['summary'].strip(), \
                  data['raw_url'], data['source'], data['publish_time'], data['rhash'])
             logging.info("sql query %s" % sql)
-            a = self.db.execute(sql)
+            a = self.eye_db.execute(sql)
             logging.info("sql query result %s" % a)
         elif data['class'] == "event":
             for i in data['start']:
@@ -40,7 +41,7 @@ class Result:
                      data['source'], data['event_type'], data['raw_url'], \
                      data['weight'], data_hash)
                 print(sql)
-                a = self.db.execute(sql)
+                a = self.web_db.execute(sql)
                 print(a)
 
 

@@ -36,7 +36,7 @@ def get_today_zero():
 
 class DBHelper:
     # 构造函数
-    def __init__(self, host='10.1.161.28', user='secapi', pwd='', db='sec_cal'):
+    def __init__(self, db='sec_web'):
         headers = {
             "Authorization": "Bearer s.h4QW7bEW3vP8e7h0WjNSph7V"
         }
@@ -46,7 +46,7 @@ class DBHelper:
         self.host = '10.1.161.29'
         self.user = data['username']
         self.pwd = data['password']
-        self.db = 'sec_web'
+        self.db = db
         self.conn = None
         self.cur = None
 

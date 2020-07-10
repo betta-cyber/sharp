@@ -11,7 +11,7 @@ def get_rank_text(text):
     # print(a)
 
     keywords_textrank = jieba.analyse.textrank(text, topK=15, withWeight=True)
-    print(keywords_textrank)
+    # print(keywords_textrank)
     return keywords_textrank
 
 

@@ -10,7 +10,7 @@ start:
 abstract:
   type: selector
   struct: string
-  length: 200
+  length: :200
   pattern: "#content"
 raw_url:
   type: system

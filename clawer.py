@@ -7,6 +7,7 @@ from utils import redis_c, load_yaml, md5
 
 
 def event_clawer():
+    # for i in ['miit', 'cac', 'tc260', 'cert', 'djbh']:
     for i in ['miit', 'cac', 'tc260', 'cert', 'djbh']:
         data = {'type': i, 'class': 'event'}
         redis_c.lpush("list", json.dumps(data))
@@ -22,10 +23,11 @@ def intelligence_clawer():
 
 
 if __name__ == '__main__':
-    # sched = BlockingScheduler()
-    # sched.add_job(intelligence_clawer, 'interval', hours=2)
+    sched = BlockingScheduler()
+    sched.add_job(intelligence_clawer, 'interval', hours=10)
+    sched.add_job(event_clawer, 'interval', hours=2)
 
-    # sched.start()
+    sched.start()
 
     # intelligence_clawer()
-    event_clawer()
+    # event_clawer()
