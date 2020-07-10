@@ -1,0 +1,30 @@
+-
+  url: $requests
+  data-format: "json"
+  data:
+    url: "http://wechat.doonsec.com/tags/?page=1&cat_id=3&_=1593596767797"
+  source: "doonsec"
+  pattern:
+    type: "list"
+    selector: "data"
+  response:
+    title:
+      type: key
+      struct: string
+      pattern: "title"
+    raw_url:
+      type: key
+      struct: string
+      pattern: 'url'
+    summary:
+      type: key
+      struct: string
+      pattern: "digest"
+    source:
+      type: key
+      struct: string
+      pattern: "account_name"
+    publish_time:
+      type: key
+      struct: string
+      pattern: "publish_time"

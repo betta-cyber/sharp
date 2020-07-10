@@ -6,15 +6,28 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from utils import redis_c, load_yaml, md5
 
 
-def clawer():
+def event_clawer():
+    # for i in ['miit', 'cac', 'tc260', 'cert', 'djbh']:
     for i in ['miit', 'cac', 'tc260', 'cert', 'djbh']:
-        data = {'type': i}
+        data = {'type': i, 'class': 'event'}
         redis_c.lpush("list", json.dumps(data))
-        time.sleep(300)
+        # time.sleep(300)
+
+
+def intelligence_clawer():
+    print("11111 start")
+    for i in ['anquanke', 'xz', 'doonsec', 'cnvd', 'seebug']:
+        data = {'type': i, 'class': 'intelligence'}
+        redis_c.lpush("list", json.dumps(data))
+        # time.sleep(300)
 
 
 if __name__ == '__main__':
     sched = BlockingScheduler()
-    sched.add_job(clawer, 'cron', hour=0)
+    sched.add_job(intelligence_clawer, 'interval', hours=10)
+    sched.add_job(event_clawer, 'interval', hours=2)
 
     sched.start()
+
+    # intelligence_clawer()
+    # event_clawer()

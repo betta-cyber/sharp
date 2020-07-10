@@ -1,0 +1,27 @@
+-
+  url: "https://xz.aliyun.com/"
+  data-format: "html"
+  pattern:
+    type: "list"
+    selector: "#includeList > table > tbody > tr"
+  response:
+    title:
+      type: find_by_class
+      struct: string
+      pattern: "a|topic-title"
+    raw_url:
+      type: hybrid
+      struct: string
+      pattern: 'https://xz.aliyun.com{title.href}'
+    summary:
+      type: find_by_class
+      struct: string
+      pattern: "a|topic-title"
+    source:
+      type: static
+      struct: string
+      pattern: "先知社区"
+    publish_time:
+      type: func
+      struct: string
+      pattern: "filter_time"

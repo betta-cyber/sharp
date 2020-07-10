@@ -36,14 +36,14 @@ def get_today_zero():
 
 class DBHelper:
     # 构造函数
-    def __init__(self, host='10.1.161.28', user='secapi', pwd='', db='sec_cal'):
+    def __init__(self, db='sec_web'):
         headers = {
-            "Authorization": "Bearer s.C3IOnaDCCowv7SCdYuzVnRyR"
+            "Authorization": "Bearer s.h4QW7bEW3vP8e7h0WjNSph7V"
         }
-        r = requests.get("https://10.1.161.12:8200/v1/database/static-creds/secapi-s-28", headers=headers, verify=False)
+        r = requests.get("https://10.1.161.12:8200/v1/database/static-creds/mysql-29-secapi-s", headers=headers, verify=False)
         data = r.json()['data']
 
-        self.host = host
+        self.host = '10.1.161.29'
         self.user = data['username']
         self.pwd = data['password']
         self.db = db

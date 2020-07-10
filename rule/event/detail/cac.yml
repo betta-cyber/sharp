@@ -1,17 +1,17 @@
 title:
   type: selector
   struct: string
-  pattern: "#WenziB > span"
+  pattern: "#title"
 start:
   type: func
   struct: list
   pattern: "find_time"
-  dom: "#zhongwenzi"
+  dom: "#center"
 abstract:
   type: selector
   struct: string
-  length: 200
-  pattern: "#zhongwenzi > blockquote"
+  length: :200
+  pattern: "#content"
 raw_url:
   type: system
   struct: string
@@ -19,7 +19,7 @@ raw_url:
 source:
   type: static
   struct: string
-  pattern: "网络安全等级保护网"
+  pattern: "网信办"
 event_type:
   type: system
   struct: string
@@ -28,4 +28,4 @@ weight:
   type: func
   struct: string
   pattern: "get_weight"
-  dom: "#zhongwenzi"
+  dom: "#center"

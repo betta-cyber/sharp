@@ -3,6 +3,7 @@
 import asyncio
 import json
 import time
+import logging
 from datetime import datetime
 from threading import Thread
 from pyppeteer import launch
@@ -11,11 +12,15 @@ from utils import redis_c, load_yaml, get_today_zero
 from module.date_parser import TimeFinder
 from module.weight_parser import calculate_weight
 
+logging.basicConfig(filename='debug.log', level=logging.INFO)
+
 
 class Pipeline:
 
     def __init__(self, target):
-        self.target = load_yaml('rule/detail/%s.yml' % target['type'])
+        self._type = target['type']
+        self._class = target['class']
+        self._obj = load_yaml('rule/%s/detail/%s.yml' % (target['class'], target['type']))
         self.url = target['url']
         self.basetime = target.get('basetime', None)
         self.event_type = target['event_type']
@@ -26,29 +31,49 @@ class Pipeline:
         pass
 
     async def parser(self):
-        browser = await launch(
-            headless=True,
-            args=['--disable-infobars', '--no-sandbox']
-        )
-        page = await browser.newPage()
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                                '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
-        # await page.setViewport({'width': 1080, 'height': 960})
-        await page.goto(self.url)
-        self.content = await page.content()
+        logging.info('-- START PARSER DETAIL PAGE --')
+        logging.debug(self._obj)
 
-        await browser.close()
-        await self.analysis()
+        if self._class == "event":
+            browser = await launch(
+                headless=True,
+                args=['--disable-infobars', '--no-sandbox']
+            )
+            page = await browser.newPage()
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                    '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
+            # await page.setViewport({'width': 1080, 'height': 960})
+            await page.goto(self.url)
+            self.content = await page.content()
+            self.content = BeautifulSoup(self.content, 'html.parser')
 
-    async def analysis(self):
-        self.content = BeautifulSoup(self.content, 'html.parser')
+            await browser.close()
+            await self.analysis(self._obj)
 
-        for k, v in self.target.items():
+    async def analysis(self, obj):
+        logging.info('-- START ANALYSIS DETAIL PAGE --')
+        for k, v in obj.items():
             if not k or not v:
                 raise Exception('config error')
             self.result[k] = self.get_value(v)
+        self.result['class'] = "event"
+        logging.info('-- FINISH ANALYSIS DETAIL PAGE --')
+        logging.info(self.result)
         redis_c.lpush('result', json.dumps(self.result))
-        print(self.result)
+
+    def slice_length(self, u, pattern):
+        logging.info("params %s %s" % (u, pattern))
+        try:
+            length = pattern.split(":")
+            if length[0] and length[1]:
+                u = u[int(length[0]):int(length[1])]
+            elif length[0] and not length[1]:
+                u = u[int(length[0]):]
+            elif not length[0] and length[1]:
+                u = u[:int(length[1])]
+        except Exception as e:
+            logging.error("slice value error %s" % (str(e)))
+        return u
 
     def get_value(self, selector):
         try:
@@ -90,10 +115,10 @@ class Pipeline:
                 # todo:
                 # other select tool
         except Exception as e:
-            print("get value error %s, key is %s" % (str(e), selector))
+            logging.error("get value error %s, key is %s" % (str(e), selector))
         # filter length
         try:
-            value = value[:selector['length']]
+            value = self.slice_length(value, selector['length'])
         except Exception:
             pass
         return value
@@ -115,7 +140,7 @@ if __name__ == '__main__':
         target = redis_c.rpop("target")
         if target:
             target = json.loads(target)
-            print("start %s" % target)
+            logging.info("start %s" % target)
             p = Pipeline(target)
             asyncio.run_coroutine_threadsafe(p.parser(), main_loop)
         time.sleep(5)

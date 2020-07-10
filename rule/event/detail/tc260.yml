@@ -1,17 +1,17 @@
 title:
   type: selector
   struct: string
-  pattern: "#title"
+  pattern: body > div.container.contentBg > div > div.news_end > div.news_end_tit
 start:
   type: func
   struct: list
   pattern: "find_time"
-  dom: "#center"
+  dom: "body > div.container.contentBg > div > div.news_end"
 abstract:
   type: selector
   struct: string
-  length: 200
-  pattern: "#content"
+  length: :200
+  pattern: "#new_content"
 raw_url:
   type: system
   struct: string
@@ -19,7 +19,7 @@ raw_url:
 source:
   type: static
   struct: string
-  pattern: "网信办"
+  pattern: "信息安全标准化技术委员会"
 event_type:
   type: system
   struct: string
@@ -28,4 +28,4 @@ weight:
   type: func
   struct: string
   pattern: "get_weight"
-  dom: "#center"
+  dom: "body > div.container.contentBg > div > div.news_end"

@@ -1,0 +1,30 @@
+-
+  url: $requests
+  data-format: "json"
+  data:
+    url: "https://api.anquanke.com/data/v1/posts?size=200&page=1"
+  source: "安全客"
+  pattern:
+    type: "list"
+    selector: "data"
+  response:
+    title:
+      type: key
+      struct: string
+      pattern: "title"
+    raw_url:
+      type: hybrid-json
+      struct: string
+      pattern: "https://www.anquanke.com/post/id/{id}"
+    summary:
+      type: key
+      struct: string
+      pattern: "desc"
+    source:
+      type: static
+      struct: string
+      pattern: "安全客"
+    publish_time:
+      type: key
+      struct: string
+      pattern: "date"
