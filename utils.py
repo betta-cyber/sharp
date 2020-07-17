@@ -43,10 +43,14 @@ class DBHelper:
         r = requests.get("https://10.1.161.12:8200/v1/database/static-creds/mysql-29-secapi-s", headers=headers, verify=False)
         data = r.json()['data']
 
-        self.host = '10.1.161.29'
-        self.user = data['username']
-        self.pwd = data['password']
-        self.db = db
+        # self.host = '10.1.161.29'
+        # self.user = data['username']
+        # self.pwd = data['password']
+        self.host = '10.1.30.29'
+        self.user = 'root'
+        self.pwd = 'root'
+
+        self.db = 'eye'
         self.conn = None
         self.cur = None
 
