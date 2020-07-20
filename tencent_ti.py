@@ -4,7 +4,8 @@ import asyncio
 import time
 from pyppeteer import launch
 from bs4 import BeautifulSoup
-from utils import DBHelper
+from utils import DBHelper, md5
+import pymysql
 
 
 async def clawer(u):
@@ -53,24 +54,36 @@ async def clawer(u):
         page_content = await page.content()
 
         page_data = BeautifulSoup(page_content, "html.parser")
-        bodylabel = page_data.select('body > div.container.container-user.container-user-report-detail > div > div.section.section-user > dv > div > diiv:nth-child(5) > div')
-        print(bodylabel)
-        abstract = bodylabel[0].get_text()
 
-        title_dom = page_data.select('body > div.contaer-user.container-user-report-detail > div > div.section.section-user > d div:nth-child(5) > div')
+        title_dom = page_data.select('body > div.container.container-user > div > div.section.section-user > div > div > h2')
         title = title_dom[0].get_text().strip()
 
-        cve_dom = page_data.select('body > div.container.container-user.cer-report-detail > div > .section-user > div > div > divv > p > a')
+        platform_dom = page_data.select('body > div.container.container-user > div > div.section.section-user > div > div > div.ti-title-info > div > p > span:nth-child(1)')
+        platform = platform_dom[0].get_text().strip()
+
+        bodylabel = page_data.select('body > div.container.container-user > div > div.section.section-user > div > div > div:nth-child(6) > div')
+        abstract = bodylabel[0].get_text().strip()
+        abstract = pymysql.escape_string(abstract)
+
+        source_dom = page_data.select('body > div.container.container-user > div > div.section.section-user > div > div > div:nth-child(4) > div')
+        source = source_dom[0].get_text().strip()
+
+        update_title_dom = page_data.select('body > div.container.container-user > div > div.section.section-user > div > div > div:nth-child(5) > div')
+        update_title = update_title_dom[0].get_text().strip()
+
+        cve_dom = page_data.select('body > div.container.container-user > div > div.section.section-user > div > div > div:nth-child(8) > div')
         cve_id = cve_dom[0].get_text().strip()
         # abstract = abstract.strip()[:200]
         await page.close()
-        print(abstract, title, cve_id)
-
-        # sql = "insert into vul (title, summary, commit_time, ssv_id, level, raw_url, cve_id) values \
-            # ('%s', '%s', '%s', '%s', '%s', '%s', '%s');" % (title, '', start, ssv_id, level, raw_url, '')
-        # # print(sql)
-        # a = mysql_db.execute(sql)
-        # print(a)
+        try:
+            sql = "insert into update_message (name, component, commit_time, update_type, description, source, cve_id, version, level, source_hash, source_platform, commit_user, update_title) values \
+                ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % \
+                (title, component, commit_time, update_type, abstract, source, cve_id, version, vul_type, md5(source + abstract), platform, 'TSRC', update_title)
+            # print(sql)
+            a = mysql_db.execute(sql)
+            print(a)
+        except Exception as e:
+            print(str(e))
 
     # next_page = int(current_page) + 1
     # if next_page <= int(total_page):
