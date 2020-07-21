@@ -24,7 +24,8 @@ class DevelopmentConfig(Config):
     data = r.json()['data']['data']
 
     REDIS_HOST = '127.0.0.1'
-    REDIS_PASSWORD = data['password']
+    # REDIS_PASSWORD = data['password']
+    REDIS_PASSWORD = ''
     REDIS_PORT = 6379
     REDIS_DB = 1
 

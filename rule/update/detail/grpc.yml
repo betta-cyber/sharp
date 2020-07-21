@@ -1,0 +1,20 @@
+name:
+  type: key
+  struct: string
+  pattern: "#title"
+component:
+  type: static
+  struct: list
+  pattern: "grpc"
+commit-time:
+  type: key
+  struct: string
+  pattern: "#content"
+source:
+  type: system
+  struct: string
+  pattern: $url
+level:
+  type: static
+  struct: string
+  pattern: "网信办"

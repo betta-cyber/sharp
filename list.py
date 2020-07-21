@@ -32,6 +32,10 @@ HEADERS = {
     'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6',
 }
 
+GITHUB_HEADERS = {
+    'Accept': 'application/vnd.github.v3+json',
+}
+
 
 class Listpipe:
 
@@ -137,6 +141,31 @@ class Listpipe:
                         self.content = r.json()
                         self.analysis_json(list_obj)
 
+        elif self.lclass == "update":
+            logging.info(' -- update info -----')
+            for list_obj in self.list_obj:
+                if not list_obj['url'].startswith('$'):
+                    browser = await launch(
+                        headless=True,
+                        args=['--disable-infobars', '--no-sandbox']
+                    )
+                    page = await browser.newPage()
+                    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                    '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
+                    self.url_info = urlparse(list_obj['url'])
+                    await page.goto(list_obj['url'])
+                    logging.info(' -- finish get url -----')
+                    self.content = await page.content()
+                    print(self.content)
+                    await self.analysis(list_obj)
+                    await browser.close()
+                else:
+                    if list_obj['url'] == "$requests":
+                        data = list_obj['data']
+                        r = requests.get(data['url'], headers=GITHUB_HEADERS, verify=False)
+                        self.content = r.json()
+                        self.analysis_json(list_obj)
+
     async def analysis(self, list_obj):
         logging.info('-- analysis event --')
         self.content = BeautifulSoup(self.content, 'html.parser')
@@ -221,6 +250,33 @@ class Listpipe:
                 else:
                     print("exist url %s" % url)
 
+        elif self.lclass == "update":
+            for i in self.content:
+                logging.info(i)
+                u = {
+                    "class": self.lclass,
+                    "raw_url": self.get_value(i, list_obj['response']['url']),
+                    "component": self.get_value(i, list_obj['response']['component']),
+                    "commit_time": self.get_value(i, list_obj['response']['commit_time']),
+                    "update_type": self.get_value(i, list_obj['response']['update_type']),
+                    "description": self.get_value(i, list_obj['response']['description']),
+                    "source": self.get_value(i, list_obj['response']['source']),
+                    "cve_id": self.get_value(i, list_obj['response']['cve_id']),
+                    "version": self.get_value(i, list_obj['response']['version']),
+                    "level": self.get_value(i, list_obj['response']['level']),
+                    "source_platform": self.get_value(i, list_obj['response']['source_platform']),
+                    "commit_user": self.get_value(i, list_obj['response']['commit_user']),
+                    "update_title": self.get_value(i, list_obj['response']['update_title']),
+                }
+                print(u)
+                url = u['raw_url']
+                if self.unique_url(url):
+                    uhash = str(md5(url))
+                    u["source_hash"] = uhash
+                    redis_c.lpush('result', json.dumps(u))
+                    logging.info(url)
+                    print("push url %s" % url)
+
     def analysis_html(self, list_obj):
         logging.info('-- analysis html --')
         if self.lclass == "intelligence":
@@ -270,7 +326,7 @@ class Listpipe:
                 if selector['type'] == "system":
                     if selector['pattern'].startswith('$'):
                         if selector['pattern'] == "$url":
-                            value = self.url
+                            value = self.url_info
                         if selector['pattern'] == "$event_type":
                             value = self.event_type
                     else:
@@ -313,6 +369,17 @@ class Listpipe:
                         value = re.search(time_pattern, data.get_text()).group()
                     if selector['pattern'] == 'get_text':
                         value = data.get_text().strip()
+                    if selector['pattern'] == 'find_cve':
+                        # value = data.get('body')
+                        pattern = "(?i)payload|security|cve|exp|websec"
+                        if re.search(pattern, data['body']):
+                            value = "安全更新"
+                        else:
+                            value = "普通更新"
+                    if selector['pattern'] == 'check_update_type':
+                        cve_pattern = "\\d{4}-\\d{2}-\\d{2}"
+                        values = re.findall(cve_pattern, data['body'])
+                        value = "\n".join(values)
                 # todo:
                 # other select tool
         except Exception as e:
