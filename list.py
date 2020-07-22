@@ -162,6 +162,7 @@ class Listpipe:
                 else:
                     if list_obj['url'] == "$requests":
                         data = list_obj['data']
+                        self.url_info = data['url']
                         r = requests.get(data['url'], headers=GITHUB_HEADERS, verify=False)
                         self.content = r.json()
                         self.analysis_json(list_obj)
@@ -253,14 +254,16 @@ class Listpipe:
         elif self.lclass == "update":
             for i in self.content:
                 logging.info(i)
+                print(1111)
                 u = {
                     "class": self.lclass,
                     "raw_url": self.get_value(i, list_obj['response']['url']),
                     "component": self.get_value(i, list_obj['response']['component']),
                     "commit_time": self.get_value(i, list_obj['response']['commit_time']),
-                    "update_type": self.get_value(i, list_obj['response']['update_type']),
+                    # "commit_time": time.strftime("%Y-%m-%d %H:%M", self.get_value(i, list_obj['response']['commit_time'])),
                     "description": self.get_value(i, list_obj['response']['description']),
                     "source": self.get_value(i, list_obj['response']['source']),
+                    "update_type": self.get_value(i, list_obj['response']['update_type']),
                     "cve_id": self.get_value(i, list_obj['response']['cve_id']),
                     "version": self.get_value(i, list_obj['response']['version']),
                     "level": self.get_value(i, list_obj['response']['level']),
@@ -369,14 +372,13 @@ class Listpipe:
                         value = re.search(time_pattern, data.get_text()).group()
                     if selector['pattern'] == 'get_text':
                         value = data.get_text().strip()
-                    if selector['pattern'] == 'find_cve':
-                        # value = data.get('body')
+                    if selector['pattern'] == 'check_update_type':
                         pattern = "(?i)payload|security|cve|exp|websec"
                         if re.search(pattern, data['body']):
                             value = "安全更新"
                         else:
                             value = "普通更新"
-                    if selector['pattern'] == 'check_update_type':
+                    if selector['pattern'] == 'find_cve':
                         cve_pattern = "\\d{4}-\\d{2}-\\d{2}"
                         values = re.findall(cve_pattern, data['body'])
                         value = "\n".join(values)

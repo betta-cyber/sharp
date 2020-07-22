@@ -43,6 +43,24 @@ class Result:
                 print(sql)
                 a = self.web_db.execute(sql)
                 print(a)
+        elif data['class'] == "update":
+            source_hash = md5(data['raw_url'])
+            time_st = time.strptime(data['commit_time'], "%Y-%m-%dT%H:%M:%SZ")
+            commit_time = time.strftime('%Y-%m-%d %H:%M', time_st)
+            # "publish_time": time.strftime("%Y-%m-%d %H:%M", self.get_value(i, list_obj['response']['publish_time'])),
+            try:
+                sql = "insert into update_message (name, component, commit_time, update_type, description, source, cve_id, version, level, source_hash, source_platform, commit_user, update_title) values \
+                    ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % \
+                    (data['update_title'].strip(), data['component'].strip(), \
+                     commit_time, data['update_type'], data['description'], \
+                     data['source'], data['cve_id'], data['version'], data['level'], \
+                     source_hash, data['source_platform'], data['commit_user'], data['update_title'])
+                logging.info("sql query %s" % sql)
+                a = self.eye_db.execute(sql)
+                print(a)
+                logging.info("sql query result %s" % a)
+            except Exception as e:
+                print(str(e))
 
 
 def start_thread_loop(loop):
