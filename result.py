@@ -4,6 +4,7 @@ import asyncio
 import json
 import time
 import logging
+import pymysql
 from datetime import datetime
 from threading import Thread
 from utils import redis_c, load_yaml, DBHelper, md5
@@ -52,7 +53,7 @@ class Result:
                 sql = "insert into update_message (name, component, commit_time, update_type, description, source, cve_id, version, level, source_hash, source_platform, commit_user, update_title) values \
                     ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % \
                     (data['update_title'].strip(), data['component'].strip(), \
-                     commit_time, data['update_type'], data['description'], \
+                     commit_time, data['update_type'], pymysql.escape_string(data['description']), \
                      data['source'], data['cve_id'], data['version'], data['level'], \
                      source_hash, data['source_platform'], data['commit_user'], data['update_title'])
                 logging.info("sql query %s" % sql)

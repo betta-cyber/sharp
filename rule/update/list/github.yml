@@ -31,7 +31,7 @@
     source:
       type: key
       struct: string
-      pattern: "url"
+      pattern: "html_url"
     source_platform:
       type: static
       struct: string
@@ -89,7 +89,7 @@
     source:
       type: key
       struct: string
-      pattern: "url"
+      pattern: "html_url"
     source_platform:
       type: static
       struct: string
@@ -147,7 +147,7 @@
     source:
       type: key
       struct: string
-      pattern: "url"
+      pattern: "html_url"
     source_platform:
       type: static
       struct: string
@@ -205,7 +205,7 @@
     source:
       type: key
       struct: string
-      pattern: "url"
+      pattern: "html_url"
     source_platform:
       type: static
       struct: string
@@ -263,7 +263,7 @@
     source:
       type: key
       struct: string
-      pattern: "url"
+      pattern: "html_url"
     source_platform:
       type: static
       struct: string
@@ -321,7 +321,7 @@
     source:
       type: key
       struct: string
-      pattern: "url"
+      pattern: "html_url"
     source_platform:
       type: static
       struct: string
@@ -379,7 +379,7 @@
     source:
       type: key
       struct: string
-      pattern: "url"
+      pattern: "html_url"
     source_platform:
       type: static
       struct: string
@@ -437,7 +437,7 @@
     source:
       type: key
       struct: string
-      pattern: "url"
+      pattern: "html_url"
     source_platform:
       type: static
       struct: string
@@ -495,7 +495,7 @@
     source:
       type: key
       struct: string
-      pattern: "url"
+      pattern: "html_url"
     source_platform:
       type: static
       struct: string
