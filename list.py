@@ -122,7 +122,7 @@ class Listpipe:
                 if not list_obj['url'].startswith('$'):
                     browser = await launch(
                         headless=True,
-                        args=['--disable-infobars', '--no-sandbox']
+                        args=['--disable-infobars', '--no-sandbox', '--disable-dev-shm-usage']
                     )
                     page = await browser.newPage()
                     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -166,6 +166,26 @@ class Listpipe:
                         r = requests.get(data['url'], headers=GITHUB_HEADERS, verify=False)
                         self.content = r.json()
                         self.analysis_json(list_obj)
+
+        elif self.lclass == "vul":
+            logging.info(' -- vul info -----')
+            for list_obj in self.list_obj:
+                if not list_obj['url'].startswith('$'):
+                    if list_obj['data-format'] == "html":
+                        browser = await launch(
+                            headless=False,
+                            args=['--disable-infobars', '--no-sandbox', '--disable-dev-shm-usage']
+                        )
+                        page = await browser.newPage()
+                        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                        '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
+                        self.url_info = urlparse(list_obj['url'])
+                        await page.goto(list_obj['url'])
+                        self.content = await page.content()
+                        self.content = BeautifulSoup(self.content, 'html.parser')
+                        print(self.content)
+                        await browser.close()
+                        self.analysis_html(list_obj)
 
     async def analysis(self, list_obj):
         logging.info('-- analysis event --')
@@ -300,6 +320,23 @@ class Listpipe:
                 if self.unique_url(url):
                     u["rhash"] = uhash
                     redis_c.lpush('result', json.dumps(u))
+                    print("push url %s" % url)
+        if self.lclass == "vul":
+            lists = self.content.select(list_obj['pattern']['selector'])
+            self.current_obj = list_obj
+            for i in lists:
+                # url is the most import thing
+                u = {
+                    "class": self.lclass,
+                    "raw_url": self.get_value(i, list_obj['response']['raw_url']),
+                    "title": self.get_value(i, list_obj['response']['title']).strip(),
+                }
+                print(u)
+                url = u['raw_url']
+                uhash = str(md5(url))
+                if self.unique_url(url):
+                    u["rhash"] = uhash
+                    redis_c.lpush('target', json.dumps(u))
                     print("push url %s" % url)
 
     def analysis_rss(self, list_obj):

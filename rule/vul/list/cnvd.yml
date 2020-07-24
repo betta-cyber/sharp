@@ -1,0 +1,16 @@
+-
+  url: "https://www.cnvd.org.cn/flaw/list.htm"
+  data-format: "html"
+  source: "cnvd"
+  pattern:
+    type: "list"
+    selector: "body > div.mw.Main.clearfix > div.blkContainer > div > div:nth-child(2) > table > tbody > tr"
+  response:
+    title:
+      type: tag
+      struct: string
+      pattern: "a"
+    raw_url:
+      type: hybrid
+      struct: string
+      pattern: 'https://www.cnvd.org.cn{title.href}'
