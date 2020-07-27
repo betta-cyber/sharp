@@ -173,7 +173,7 @@ class Listpipe:
                 if not list_obj['url'].startswith('$'):
                     if list_obj['data-format'] == "html":
                         browser = await launch(
-                            headless=False,
+                            headless=True,
                             args=['--disable-infobars', '--no-sandbox', '--disable-dev-shm-usage']
                         )
                         page = await browser.newPage()
@@ -328,11 +328,12 @@ class Listpipe:
                 # url is the most import thing
                 u = {
                     "class": self.lclass,
-                    "raw_url": self.get_value(i, list_obj['response']['raw_url']),
+                    "type": self.ltype,
+                    "url": self.get_value(i, list_obj['response']['url']),
                     "title": self.get_value(i, list_obj['response']['title']).strip(),
                 }
                 print(u)
-                url = u['raw_url']
+                url = u['url']
                 uhash = str(md5(url))
                 if self.unique_url(url):
                     u["rhash"] = uhash

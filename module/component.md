@@ -1,0 +1,11 @@
+dubbo
+mongodb
+kafka
+postgresql
+grpc
+rocketmq
+jedis
+mybatis
+mybatis-plus
+lettuce
+redisson

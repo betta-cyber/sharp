@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
+import re
 import json
 import time
 import logging
@@ -11,6 +12,7 @@ from bs4 import BeautifulSoup
 from utils import redis_c, load_yaml, get_today_zero
 from module.date_parser import TimeFinder
 from module.weight_parser import calculate_weight
+from module.vul_component import check_component
 
 logging.basicConfig(filename='debug.log', level=logging.INFO)
 
@@ -22,8 +24,9 @@ class Pipeline:
         self._class = target['class']
         self._obj = load_yaml('rule/%s/detail/%s.yml' % (target['class'], target['type']))
         self.url = target['url']
-        self.basetime = target.get('basetime', None)
-        self.event_type = target['event_type']
+        if self._class == "event":
+            self.basetime = target.get('basetime', None)
+            self.event_type = target['event_type']
         self.result = {}
         self.content = ""
 
@@ -49,6 +52,21 @@ class Pipeline:
 
             await browser.close()
             await self.analysis(self._obj)
+        if self._class == "vul":
+            browser = await launch(
+                headless=True,
+                args=['--disable-infobars', '--no-sandbox', '--disable-dev-shm-usage']
+            )
+            page = await browser.newPage()
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                    '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
+            await page.setViewport({'width': 1080, 'height': 960})
+            await page.goto(self.url)
+            self.content = await page.content()
+            self.content = BeautifulSoup(self.content, 'html.parser')
+
+            await browser.close()
+            await self.analysis_vul(self._obj)
 
     async def analysis(self, obj):
         logging.info('-- START ANALYSIS DETAIL PAGE --')
@@ -57,6 +75,17 @@ class Pipeline:
                 raise Exception('config error')
             self.result[k] = self.get_value(v)
         self.result['class'] = "event"
+        logging.info('-- FINISH ANALYSIS DETAIL PAGE --')
+        logging.info(self.result)
+        redis_c.lpush('result', json.dumps(self.result))
+
+    async def analysis_vul(self, obj):
+        logging.info('-- START ANALYSIS DETAIL PAGE --')
+        for k, v in obj.items():
+            if not k or not v:
+                raise Exception('config error')
+            self.result[k] = self.get_value(v)
+        self.result['class'] = "vul"
         logging.info('-- FINISH ANALYSIS DETAIL PAGE --')
         logging.info(self.result)
         redis_c.lpush('result', json.dumps(self.result))
@@ -112,16 +141,39 @@ class Pipeline:
                         dom = self.content.select(selector['dom'])
                         text = dom[0].get_text()
                         value = calculate_weight(text)
+                    if selector['pattern'] == 'find_cve':
+                        dom = self.content.select(selector['dom'])
+                        text = dom[0].get_text()
+                        cve_pattern = "\\d{4}-\\d{2}-\\d{2}"
+                        values = re.findall(cve_pattern, text)
+                        value = "\n".join(values)
+                    if selector['pattern'] == 'get_vul_level':
+                        dom = self.content.select(selector['dom'])
+                        text = dom[0].get_text()
+                        if "中" in text:
+                            value = "中危"
+                        elif "低" in text:
+                            value = "低危"
+                        elif "高" in text:
+                            value = "高危"
+                        else:
+                            value = text
+                    if selector['pattern'] == 'find_component':
+                        dom = self.content.select(selector['dom'])
+                        text = dom[0].get_text()
+                        print(text)
+                        value = check_component(text)
                 # todo:
                 # other select tool
         except Exception as e:
             logging.error("get value error %s, key is %s" % (str(e), selector))
+            value = ''
         # filter length
         try:
             value = self.slice_length(value, selector['length'])
         except Exception:
             pass
-        return value
+        return value.strip()
 
 
 def start_thread_loop(loop):

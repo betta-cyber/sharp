@@ -1,0 +1,67 @@
+title:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > h1"
+cnvd_id:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-child(1) > td:nth-child(2)"
+publish_time:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-child(2) > td:nth-child(2)"
+level:
+  type: func
+  struct: string
+  pattern: "get_vul_level"
+  dom: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-child(3) > td:nth-child(2)"
+effect_production:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-child(4) > td:nth-child(2)"
+cve_id:
+  type: func
+  struct: string
+  pattern: "find_cve"
+  dom: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix"
+vul_description:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-last-child(11) > td:nth-child(2)"
+vul_type:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-last-child(10) > td:nth-child(2)"
+vul_refsource:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-last-child(9) > td:nth-child(2)"
+vul_solution:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-last-child(8) > td:nth-child(2)"
+vul_patch_url:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-last-child(7) > td:nth-child(2)"
+vul_cofirm_info:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-last-child(6) > td:nth-child(2)"
+vul_send_date:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-last-child(5) > td:nth-child(2)"
+vul_add_date:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-last-child(4) > td:nth-child(2)"
+vul_update_date:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-last-child(3) > td:nth-child(2)"
+component:
+  type: func
+  struct: string
+  pattern: "find_component"
+  dom: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > h1"

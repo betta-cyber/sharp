@@ -10,7 +10,7 @@
       type: tag
       struct: string
       pattern: "a"
-    raw_url:
+    url:
       type: hybrid
       struct: string
       pattern: 'https://www.cnvd.org.cn{title.href}'

@@ -1,0 +1,16 @@
+-
+  url: "http://www.cnnvd.org.cn/web/vulnerability/querylist.tag"
+  data-format: "html"
+  source: "cnnvd"
+  pattern:
+    type: "list"
+    selector: "body > div.container.m_t_10 > div > div.fl.w770 > div > div.list_list > ul > li"
+  response:
+    title:
+      type: tag
+      struct: string
+      pattern: "a"
+    url:
+      type: hybrid
+      struct: string
+      pattern: 'https://www.cnnvd.org.cn{title.href}'
