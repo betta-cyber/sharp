@@ -63,19 +63,35 @@ class Result:
             except Exception as e:
                 print(str(e))
         elif data['class'] == "vul":
-            try:
-                sql = "insert into vulnerability (name, summary, commit_time, level, vul_type, component, source, cve_id, cnvd_id) values \
-                    ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % \
-                    (data['title'].strip(), pymysql.escape_string(data['vul_description']),
-                     data['publish_time'], data['level'], \
-                     data['vul_type'], data['component'], "cnvd", \
-                     data['cve_id'], data['cnvd_id'])
-                logging.info("sql query %s" % sql)
-                a = self.eye_db.execute(sql)
-                print(a)
-                logging.info("sql query result %s" % a)
-            except Exception as e:
-                print(str(e))
+            if data['source'] == "cnvd":
+                try:
+                    sql = "insert into vulnerability (name, summary, commit_time, level, vul_type, component, source, cve_id, cnvd_id) values \
+                        ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % \
+                        (data['title'].strip(), pymysql.escape_string(data['vul_description']),
+                         data['publish_time'], data['level'], \
+                         data['vul_type'], data['component'], data['source'], \
+                         data['cve_id'], data['cnvd_id'])
+                    logging.info("sql query %s" % sql)
+                    a = self.eye_db.execute(sql)
+                    print(a)
+                    logging.info("sql query result %s" % a)
+                except Exception as e:
+                    print(str(e))
+            if data['source'] == "cnnvd":
+                try:
+                    sql = "insert into vulnerability (name, summary, commit_time, level, vul_type, component, source, cve_id, cnnvd_id) values \
+                        ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % \
+                        (data['title'].strip(), pymysql.escape_string(data['vul_description']),
+                         data['publish_time'], data['level'], \
+                         data['vul_type'], data['component'], data['source'], \
+                         data['cve_id'], data['cnnvd_id'])
+                    logging.info("sql query %s" % sql)
+                    a = self.eye_db.execute(sql)
+                    print(a)
+                    logging.info("sql query result %s" % a)
+                except Exception as e:
+                    print(str(e))
+
 
 
 def start_thread_loop(loop):

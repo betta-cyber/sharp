@@ -173,3 +173,4 @@ zabbix
 zimbra
 mricosoft
 微软
+ibm

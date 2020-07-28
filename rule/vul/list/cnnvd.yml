@@ -13,4 +13,8 @@
     url:
       type: hybrid
       struct: string
-      pattern: 'https://www.cnnvd.org.cn{title.href}'
+      pattern: 'http://www.cnnvd.org.cn{title.href}'
+    source:
+      type: static
+      struct: string
+      pattern: 'cnnvd'

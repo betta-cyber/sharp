@@ -131,7 +131,6 @@ class Listpipe:
                     await page.goto(list_obj['url'])
                     logging.info(' -- finish get url -----')
                     self.content = await page.content()
-                    print(self.content)
                     await self.analysis(list_obj)
                     await browser.close()
                 else:
@@ -183,7 +182,7 @@ class Listpipe:
                         await page.goto(list_obj['url'])
                         self.content = await page.content()
                         self.content = BeautifulSoup(self.content, 'html.parser')
-                        print(self.content)
+                        logging.info(self.content)
                         await browser.close()
                         self.analysis_html(list_obj)
 
@@ -274,7 +273,6 @@ class Listpipe:
         elif self.lclass == "update":
             for i in self.content:
                 logging.info(i)
-                print(1111)
                 u = {
                     "class": self.lclass,
                     "raw_url": self.get_value(i, list_obj['response']['url']),
@@ -291,7 +289,6 @@ class Listpipe:
                     "commit_user": self.get_value(i, list_obj['response']['commit_user']),
                     "update_title": self.get_value(i, list_obj['response']['update_title']),
                 }
-                print(u)
                 url = u['raw_url']
                 if self.unique_url(url):
                     uhash = str(md5(url))
@@ -329,10 +326,10 @@ class Listpipe:
                 u = {
                     "class": self.lclass,
                     "type": self.ltype,
+                    "source": self.get_value(i, list_obj['response']['source']),
                     "url": self.get_value(i, list_obj['response']['url']),
                     "title": self.get_value(i, list_obj['response']['title']).strip(),
                 }
-                print(u)
                 url = u['url']
                 uhash = str(md5(url))
                 if self.unique_url(url):

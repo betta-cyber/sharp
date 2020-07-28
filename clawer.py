@@ -15,19 +15,28 @@ def event_clawer():
 
 
 def intelligence_clawer():
-    print("11111 start")
+    print("ti start")
     for i in ['anquanke', 'xz', 'doonsec', 'cnvd', 'seebug']:
         data = {'type': i, 'class': 'intelligence'}
         redis_c.lpush("list", json.dumps(data))
         # time.sleep(300)
 
 
-if __name__ == '__main__':
-    sched = BlockingScheduler()
-    sched.add_job(intelligence_clawer, 'interval', hours=10)
-    sched.add_job(event_clawer, 'interval', hours=2)
+def vul_clawer():
+    print("vul start")
+    for i in ['cnvd', 'cnnvd']:
+        data = {'type': i, 'class': 'vul'}
+        redis_c.lpush("list", json.dumps(data))
+        # time.sleep(300)
 
-    sched.start()
+
+if __name__ == '__main__':
+    # sched = BlockingScheduler()
+    # sched.add_job(intelligence_clawer, 'interval', hours=10)
+    # sched.add_job(event_clawer, 'interval', hours=2)
+
+    # sched.start()
 
     # intelligence_clawer()
     # event_clawer()
+    vul_clawer()

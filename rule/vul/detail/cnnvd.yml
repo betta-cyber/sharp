@@ -1,0 +1,51 @@
+title:
+  type: selector
+  struct: string
+  pattern: "body > div.container.m_t_10 > div > div.fl.w770 > div.detail_xq.w770 > h2"
+cnnvd_id:
+  type: func
+  struct: string
+  pattern: "find_cnnvd"
+  dom: "body > div.container.m_t_10 > div > div.fl.w770 > div.detail_xq.w770 > ul > li:nth-child(1) > span"
+publish_time:
+  type: selector
+  struct: string
+  pattern: "body > div.container.m_t_10 > div > div.fl.w770 > div.detail_xq.w770 > ul > li:nth-child(5) > a"
+level:
+  type: func
+  struct: string
+  pattern: "get_vul_level"
+  dom: "body > div.container.m_t_10 > div > div.fl.w770 > div.detail_xq.w770 > ul > li:nth-child(2) > a"
+cve_id:
+  type: selector
+  struct: string
+  pattern: "body > div.container.m_t_10 > div > div.fl.w770 > div.detail_xq.w770 > ul > li:nth-child(3) > a"
+vul_description:
+  type: selector
+  struct: string
+  pattern: "body > div.container.m_t_10 > div > div.fl.w770 > div:nth-child(4)"
+vul_type:
+  type: selector
+  struct: string
+  pattern: "body > div.container.m_t_10 > div > div.fl.w770 > div.detail_xq.w770 > ul > li:nth-child(4) > a"
+vul_refsource:
+  type: selector
+  struct: string
+  pattern: "body > div.container.m_t_10 > div > div.fl.w770 > div:nth-child(6)"
+vul_solution:
+  type: selector
+  struct: string
+  pattern: "body > div.mw.Main.clearfix > div.blkContainer > div.blkContainerPblk > div.blkContainerSblk > div.blkContainerSblkCon.clearfix > div.tableDiv > table > tbody > tr:nth-last-child(8) > td:nth-child(2)"
+vul_patch_url:
+  type: selector
+  struct: string
+  pattern: "body > div.container.m_t_10 > div > div.fl.w770 > div:nth-child(10) > div.vulnerability_list"
+vul_update_date:
+  type: selector
+  struct: string
+  pattern: "body > div.container.m_t_10 > div > div.fl.w770 > div.detail_xq.w770 > ul > li:nth-child(7) > a"
+component:
+  type: func
+  struct: string
+  pattern: "find_component"
+  dom: "body > div.container.m_t_10 > div > div.fl.w770 > div.detail_xq.w770 > h2"

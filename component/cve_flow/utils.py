@@ -146,6 +146,57 @@ def json2tuple_dict(jfile):
     return sql, all_content
 
 
+def json2(jfile):
+    """
+    解析json，入库
+    """
+    with codecs.open(jfile, 'r', encoding='utf-8') as f:
+        fjson = json.load(f)
+
+    j = 0
+    cve = {}
+    all_content = {}
+    for i in dict_generator(fjson):
+        tp = '.'.join(i[0:-1]).replace('.', '_')
+        # 过滤json文件头
+        if tp in ['CVE_data_type', 'CVE_data_format', 'CVE_data_version', 'CVE_data_numberOfCVEs', 'CVE_data_timestamp']:
+            continue
+        value = i[-1]
+
+        # 合并json中的列表数据结构
+        cve_now = {}
+        cve_now[tp] = str(value)
+        cve = merge_dict(cve_now, cve)
+        try:
+            del cve['CVE_Items_configurations_nodes_children_cpe_match_versionStartIncluding']
+        except Exception:
+            pass
+        try:
+            del cve['CVE_Items_configurations_nodes_children_cpe_match_versionEndExcluding']
+        except Exception:
+            pass
+        try:
+            del cve['CVE_Items_configurations_nodes_children_cpe_match_versionEndIncluding']
+        except Exception:
+            pass
+        try:
+            del cve['CVE_Items_configurations_nodes_children_cpe_match_versionStartExcluding']
+        except Exception:
+            pass
+
+        # 一条完整的CVE数据
+        if tp == 'CVE_Items_lastModifiedDate':
+            cve = padding(cve, cve_tags)
+            sql = d2sql(cve)
+            if sql:
+                j = j+1
+                all_content[j] = tuple(cve.values())
+
+            cve = {}
+    return sql, all_content
+
+
+
 def sql_insert(sql, all_content):
     db = pymysql.connect("10.1.30.29", "root", "root", "eye")
     cursor = db.cursor()
@@ -153,6 +204,22 @@ def sql_insert(sql, all_content):
     try:
         logging.info("[+] INSERT NUMBER:%d" % len(all_content))
         cursor.executemany(sql, all_content.values())
+
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        logging.error("[sql]: %s %s" % (sql, str(e)))
+
+    db.close()
+
+
+def sql_insert_db(sql):
+    db = pymysql.connect("10.1.30.29", "root", "root", "eye")
+    cursor = db.cursor()
+
+    try:
+        cursor.execute(sql)
 
         db.commit()
         return True

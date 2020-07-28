@@ -27,6 +27,8 @@ class Pipeline:
         if self._class == "event":
             self.basetime = target.get('basetime', None)
             self.event_type = target['event_type']
+        if self._class == "vul":
+            self.source = target['source']
         self.result = {}
         self.content = ""
 
@@ -86,6 +88,7 @@ class Pipeline:
                 raise Exception('config error')
             self.result[k] = self.get_value(v)
         self.result['class'] = "vul"
+        self.result['source'] = self.source
         logging.info('-- FINISH ANALYSIS DETAIL PAGE --')
         logging.info(self.result)
         redis_c.lpush('result', json.dumps(self.result))
@@ -144,8 +147,14 @@ class Pipeline:
                     if selector['pattern'] == 'find_cve':
                         dom = self.content.select(selector['dom'])
                         text = dom[0].get_text()
-                        cve_pattern = "\\d{4}-\\d{2}-\\d{2}"
+                        cve_pattern = "(?i)cve-\d{3,4}-\d{3,5}"
                         values = re.findall(cve_pattern, text)
+                        value = "\n".join(values)
+                    if selector['pattern'] == 'find_cnnvd':
+                        dom = self.content.select(selector['dom'])
+                        text = dom[0].get_text()
+                        cnnvd_pattern = "(?i)cnnvd-\d{3,7}-\d{3,5}"
+                        values = re.findall(cnnvd_pattern, text)
                         value = "\n".join(values)
                     if selector['pattern'] == 'get_vul_level':
                         dom = self.content.select(selector['dom'])
@@ -161,7 +170,6 @@ class Pipeline:
                     if selector['pattern'] == 'find_component':
                         dom = self.content.select(selector['dom'])
                         text = dom[0].get_text()
-                        print(text)
                         value = check_component(text)
                 # todo:
                 # other select tool

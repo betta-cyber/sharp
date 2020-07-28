@@ -14,3 +14,7 @@
       type: hybrid
       struct: string
       pattern: 'https://www.cnvd.org.cn{title.href}'
+    source:
+      type: static
+      struct: string
+      pattern: 'cnvd'

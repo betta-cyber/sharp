@@ -2,10 +2,12 @@
 
 import requests
 import logging
+import time
 import zipfile
 import shutil
 from bs4 import BeautifulSoup
-from utils import json2tuple_dict, sql_insert
+from utils import json2tuple_dict, sql_insert, sql_insert_db
+from vul_component import check_component
 
 logging.basicConfig(filename='debug.log', level=logging.INFO)
 
@@ -49,6 +51,18 @@ def cve_monitor(monitor_init=False):
 
     sql, cve_data = json2tuple_dict(j)
     ret = sql_insert(sql, cve_data)
+    for c in cve_data:
+
+        time_st = time.strptime(cve_data[c][-4], "%Y-%m-%dT%H:%MZ")
+        commit_time = time.strftime('%Y-%m-%d %H:%M', time_st)
+        vul_sql = "insert into vulnerability (name, summary, commit_time, level, vul_type, component, source, cve_id) values \
+            ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % \
+            (cve_data[c][3], cve_data[c][14],
+             commit_time, cve_data[c][-11],
+             "", check_component(cve_data[c][14]), "nvd", cve_data[c][3])
+        print(vul_sql)
+        sql_insert_db(vul_sql)
+
     logging.info("[+] Parsed %s to database" % j)
 
 if __name__ == '__main__':
