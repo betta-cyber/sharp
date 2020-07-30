@@ -1,12 +1,10 @@
 -
-  url: $requests
+  url: "https://www.postgresql.org/about/newsarchive/security"
   data-format: "html"
-  data:
-    url: "https://www.postgresql.org/about/newsarchive/security"
   source: "postgresql"
   pattern:
-    type: "block"
-    selector: "#pgContentWrap"
+    type: "h2"
+    class: "news"
   response:
     title:
       type: tag
@@ -15,7 +13,7 @@
     raw_url:
       type: hybrid
       struct: string
-      pattern: 'https://www.cnvd.org.cn{title.href}'
+      pattern: 'https://www.postgresql.org{title.href}'
     summary:
       type: func
       struct: string
@@ -23,7 +21,7 @@
     source:
       type: static
       struct: string
-      pattern: "cnvd"
+      pattern: "postgresql_official"
     publish_time:
       type: func
       struct: string

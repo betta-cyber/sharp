@@ -88,7 +88,7 @@ class Listpipe:
                 if not list_obj['url'].startswith('$'):
                     if list_obj['data-format'] == "html":
                         browser = await launch(
-                            headless=True,
+                            headless=False,
                             args=['--disable-infobars', '--no-sandbox']
                         )
                         page = await browser.newPage()
@@ -155,8 +155,7 @@ class Listpipe:
                     await page.goto(list_obj['url'])
                     logging.info(' -- finish get url -----')
                     self.content = await page.content()
-                    print(self.content)
-                    await self.analysis(list_obj)
+                    await self.analysis_html(list_obj)
                     await browser.close()
                 else:
                     if list_obj['url'] == "$requests":
@@ -196,6 +195,12 @@ class Listpipe:
                 list_dom = self.content.select(list_obj['pattern']['selector'])
         if list_obj['pattern']['type'] == "table":
             list_dom = self.content.find_all('tr')
+        if list_obj['pattern']['type'] == "h2":
+            if list_obj['pattern'].get('class'):
+                list_dom = self.content.find_all('h2', class_=list_obj['pattern']['class'])
+            else:
+                list_dom = self.content.find_all('h2')
+
         base_url = "%s://%s" % (self.url_info.scheme, self.url_info.netloc)
 
         for i in list_dom:
@@ -291,7 +296,7 @@ class Listpipe:
                 }
                 url = u['raw_url']
                 if self.unique_url(url):
-                    uhash = str(md5(url))
+                    uhash = str(md4(url))
                     u["source_hash"] = uhash
                     redis_c.lpush('result', json.dumps(u))
                     logging.info(url)
@@ -313,7 +318,7 @@ class Listpipe:
                     "source": self.get_value(i, list_obj['response']['source'])
                 }
                 url = u['raw_url']
-                uhash = str(md5(url))
+                uhash = str(md4(url))
                 if self.unique_url(url):
                     u["rhash"] = uhash
                     redis_c.lpush('result', json.dumps(u))
@@ -336,6 +341,27 @@ class Listpipe:
                     u["rhash"] = uhash
                     redis_c.lpush('target', json.dumps(u))
                     print("push url %s" % url)
+        # if self.lclass == "update":
+            # if list_obj['pattern']['type'] == "h2":
+                # if list_obj['pattern'].get('class'):
+                    # list_dom = self.content.find_all('h2', class_=list_obj['pattern']['class'])
+                # else:
+                    # list_dom = self.content.find_all('h2')
+
+            # for l in lists:
+                # u = {
+                    # "class": self.lclass,
+                    # "type": self.ltype,
+                    # "source": self.get_value(i, list_obj['response']['source']),
+                    # "url": self.get_value(i, list_obj['response']['url']),
+                    # "title": self.get_value(i, list_obj['response']['title']).strip(),
+                # }
+                # url = u['url']
+                # uhash = str(md5(url))
+                # if self.unique_url(url):
+                    # u["rhash"] = uhash
+                    # redis_c.lpush('target', json.dumps(u))
+                    # print("push url %s" % url)
 
     def analysis_rss(self, list_obj):
         logging.info('-- analysis rss --')

@@ -4,6 +4,7 @@ import requests
 import logging
 import time
 import zipfile
+import glob
 import shutil
 from bs4 import BeautifulSoup
 from utils import json2tuple_dict, sql_insert, sql_insert_db
@@ -35,7 +36,15 @@ def cve_monitor(monitor_init=False):
 
     json_list = []
     if monitor_init:
-        pass
+        zips = glob.glob('data/json/nvdcve-1.1-*.json.zip')
+        for z in zips:
+            with zipfile.ZipFile(z) as zf:
+                print("[+] UNZIP %s" % z)
+                zf.extractall(path='data/json')
+
+        jsons_stock = glob.glob('data/json/nvdcve-1.1-*.json')
+        jsons_stock = [i for i in jsons_stock]
+        json_list.extend(jsons_stock)
     else:
         modified_zip, modified_link = (
             'nvdcve-1.1-modified.json.zip',
@@ -66,4 +75,4 @@ def cve_monitor(monitor_init=False):
     logging.info("[+] Parsed %s to database" % j)
 
 if __name__ == '__main__':
-    cve_monitor()
+    cve_monitor(monitor_init=True)

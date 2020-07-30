@@ -1,0 +1,28 @@
+-
+  url: "https://help.aliyun.com/noticelist/9213612.html"
+  data-format: "html"
+  source: "aliyun"
+  pattern:
+    type: "list"
+    selector: "body > div.content.y-row > div > div > ul > li"
+  response:
+    title:
+      type: tag
+      struct: string
+      pattern: "a"
+    raw_url:
+      type: hybrid
+      struct: string
+      pattern: 'https://help.aliyun.com{title.href}'
+    summary:
+      type: func
+      struct: string
+      pattern: "get_text"
+    source:
+      type: static
+      struct: string
+      pattern: "aliyun"
+    publish_time:
+      type: func
+      struct: string
+      pattern: "filter_time"

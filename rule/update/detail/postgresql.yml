@@ -1,0 +1,21 @@
+title:
+  type: selector
+  struct: string
+  pattern: "body > div.container.m_t_10 > div > div.fl.w770 > div.detail_xq.w770 > h2"
+raw_url:
+  type: selector
+  struct: string
+  pattern: "body > div.container.m_t_10 > div > div.fl.w770 > div.detail_xq.w770 > h2"
+summary:
+  type: selector
+  struct: string
+  pattern: "body > div.container.m_t_10 > div > div.fl.w770 > div.detail_xq.w770 > ul > li:nth-child(5) > a"
+source:
+  type: selector
+  struct: string
+  pattern: "body > div.container.m_t_10 > div > div.fl.w770 > div.detail_xq.w770 > ul > li:nth-child(3) > a"
+publish_time:
+  type: selector
+  struct: string
+  pattern: "body > div.container.m_t_10 > div > div.fl.w770 > div:nth-child(6)"
+

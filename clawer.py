@@ -30,6 +30,13 @@ def vul_clawer():
         # time.sleep(300)
 
 
+def update_clawer():
+    print("vul start")
+    for i in ['github', 'postgresql']:
+        data = {'type': i, 'class': 'update'}
+        redis_c.lpush("list", json.dumps(data))
+
+
 if __name__ == '__main__':
     # sched = BlockingScheduler()
     # sched.add_job(intelligence_clawer, 'interval', hours=10)
