@@ -163,6 +163,7 @@ class Listpipe:
                         self.url_info = data['url']
                         r = requests.get(data['url'], headers=GITHUB_HEADERS, verify=False)
                         self.content = r.json()
+                        print(self.content)
                         self.analysis_json(list_obj)
 
         elif self.lclass == "vul":
@@ -276,6 +277,7 @@ class Listpipe:
                     print("exist url %s" % url)
 
         elif self.lclass == "update":
+            print("update")
             for i in self.content:
                 logging.info(i)
                 u = {
@@ -296,7 +298,7 @@ class Listpipe:
                 }
                 url = u['raw_url']
                 if self.unique_url(url):
-                    uhash = str(md4(url))
+                    uhash = str(md5(url))
                     u["source_hash"] = uhash
                     redis_c.lpush('result', json.dumps(u))
                     logging.info(url)
@@ -318,7 +320,7 @@ class Listpipe:
                     "source": self.get_value(i, list_obj['response']['source'])
                 }
                 url = u['raw_url']
-                uhash = str(md4(url))
+                uhash = str(md5(url))
                 if self.unique_url(url):
                     u["rhash"] = uhash
                     redis_c.lpush('result', json.dumps(u))

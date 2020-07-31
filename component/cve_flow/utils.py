@@ -5,6 +5,7 @@ import codecs
 import os
 import pymysql
 import logging
+import requests
 
 logging.basicConfig(filename='debug.log', level=logging.INFO)
 
@@ -198,7 +199,13 @@ def json2(jfile):
 
 
 def sql_insert(sql, all_content):
-    db = pymysql.connect("10.1.30.29", "root", "root", "eye")
+    headers = {
+        "Authorization": "Bearer s.h4QW7bEW3vP8e7h0WjNSph7V"
+    }
+    r = requests.get("https://10.1.161.12:8200/v1/database/static-creds/mysql-29-secapi-s", headers=headers, verify=False)
+    data = r.json()['data']
+
+    db = pymysql.connect("10.1.161.29", data['username'], data['password'], "sec_eye")
     cursor = db.cursor()
 
     try:
@@ -215,7 +222,13 @@ def sql_insert(sql, all_content):
 
 
 def sql_insert_db(sql):
-    db = pymysql.connect("10.1.30.29", "root", "root", "eye")
+    headers = {
+        "Authorization": "Bearer s.h4QW7bEW3vP8e7h0WjNSph7V"
+    }
+    r = requests.get("https://10.1.161.12:8200/v1/database/static-creds/mysql-29-secapi-s", headers=headers, verify=False)
+    data = r.json()['data']
+
+    db = pymysql.connect("10.1.161.29", data['username'], data['password'], "sec_eye")
     cursor = db.cursor()
 
     try:

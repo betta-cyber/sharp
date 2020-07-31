@@ -32,6 +32,15 @@ def json_download(fname, url, retry=3, ret=False):
     return ret
 
 
+def format_risk(data):
+    if data == "HIGH":
+        return "高危"
+    if data == "MEDIUM":
+        return "中危"
+    if data == "LOW":
+        return "低危"
+    return "暂无"
+
 def cve_monitor(monitor_init=False):
 
     json_list = []
@@ -64,10 +73,12 @@ def cve_monitor(monitor_init=False):
 
         time_st = time.strptime(cve_data[c][-4], "%Y-%m-%dT%H:%MZ")
         commit_time = time.strftime('%Y-%m-%d %H:%M', time_st)
+        # check_sql = "select * from vulnerability where name = %s" % cve_data[c][3]
+
         vul_sql = "insert into vulnerability (name, summary, commit_time, level, vul_type, component, source, cve_id) values \
             ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % \
             (cve_data[c][3], cve_data[c][14],
-             commit_time, cve_data[c][-11],
+             commit_time, format_risk(cve_data[c][-12]),
              "", check_component(cve_data[c][14]), "nvd", cve_data[c][3])
         print(vul_sql)
         sql_insert_db(vul_sql)
