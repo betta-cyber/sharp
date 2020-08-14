@@ -1,0 +1,20 @@
+-
+  url: "https://security.tencent.com/ti?appid=0&type=1&level=-1&start_date=&end_date="
+  data-format: "html"
+  source: "TSRC"
+  pattern:
+    type: "list"
+    selector: "body > div.container.container-blog > div > div.section.section-blog > div > div.blog_content > div.content_list > div > div > div.sheet_body > table > tbody > tr"
+  response:
+    title:
+      type: tag
+      struct: string
+      pattern: "a"
+    url:
+      type: hybrid
+      struct: string
+      pattern: 'https://security.tencent.com/{title.href}'
+    source:
+      type: static
+      struct: string
+      pattern: 'tsrc'

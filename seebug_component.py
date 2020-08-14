@@ -26,6 +26,7 @@ async def clawer(u):
         """)
 
     content = await page.content()
+    print(content)
 
     data = BeautifulSoup(content, "html.parser")
     cal_lists = data.select('#J-appdir-list > div > div > section.related-vul > div  table > tbody > tr')

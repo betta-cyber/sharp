@@ -13,7 +13,7 @@ from pyppeteer import launch, errors
 from bs4 import BeautifulSoup
 from utils import redis_c, load_yaml, md5
 
-logging.basicConfig(filename='debug.log', level=logging.DEBUG)
+logging.basicConfig(filename='debug.log', level=logging.INFO)
 
 
 COOKIES = {
@@ -145,7 +145,7 @@ class Listpipe:
             for list_obj in self.list_obj:
                 if not list_obj['url'].startswith('$'):
                     browser = await launch(
-                        headless=True,
+                        headless=False,
                         args=['--disable-infobars', '--no-sandbox']
                     )
                     page = await browser.newPage()
@@ -277,7 +277,7 @@ class Listpipe:
                     print("exist url %s" % url)
 
         elif self.lclass == "update":
-            print("update")
+            print("start update list")
             for i in self.content:
                 logging.info(i)
                 u = {
@@ -306,6 +306,7 @@ class Listpipe:
 
     def analysis_html(self, list_obj):
         logging.info('-- analysis html --')
+        self.content = BeautifulSoup(self.content, 'html.parser')
         if self.lclass == "intelligence":
             lists = self.content.select(list_obj['pattern']['selector'])
             self.current_obj = list_obj
@@ -343,27 +344,31 @@ class Listpipe:
                     u["rhash"] = uhash
                     redis_c.lpush('target', json.dumps(u))
                     print("push url %s" % url)
-        # if self.lclass == "update":
-            # if list_obj['pattern']['type'] == "h2":
-                # if list_obj['pattern'].get('class'):
-                    # list_dom = self.content.find_all('h2', class_=list_obj['pattern']['class'])
-                # else:
-                    # list_dom = self.content.find_all('h2')
+        if self.lclass == "update":
+            print("html update analysis")
+            if list_obj['pattern']['type'] == "h2":
+                if list_obj['pattern'].get('class'):
+                    lists = self.content.find_all('h2', class_=list_obj['pattern']['class'])
+                else:
+                    lists = self.content.find_all('h2')
+            else:
+                lists = self.content.select(list_obj['pattern']['selector'])
 
-            # for l in lists:
-                # u = {
-                    # "class": self.lclass,
-                    # "type": self.ltype,
-                    # "source": self.get_value(i, list_obj['response']['source']),
-                    # "url": self.get_value(i, list_obj['response']['url']),
-                    # "title": self.get_value(i, list_obj['response']['title']).strip(),
-                # }
-                # url = u['url']
-                # uhash = str(md5(url))
-                # if self.unique_url(url):
-                    # u["rhash"] = uhash
-                    # redis_c.lpush('target', json.dumps(u))
-                    # print("push url %s" % url)
+            self.current_obj = list_obj
+            for i in lists:
+                u = {
+                    "class": self.lclass,
+                    "type": self.ltype,
+                    "source": self.get_value(i, list_obj['response']['source']),
+                    "url": self.get_value(i, list_obj['response']['url']),
+                    "title": self.get_value(i, list_obj['response']['title']).strip(),
+                }
+                url = u['url']
+                uhash = str(md5(url))
+                if self.unique_url(url):
+                    u["rhash"] = uhash
+                    redis_c.lpush('target', json.dumps(u))
+                    print("push url %s" % url)
 
     def analysis_rss(self, list_obj):
         logging.info('-- analysis rss --')
@@ -419,7 +424,9 @@ class Listpipe:
                     for i in matchs:
                         if '.' in i:
                             k = i.split('.')
+                            print(k)
                             dom = self.get_dom(data, k[0])
+                            print(dom)
                             data = dom[k[1]]
                         need_replace[i] = data
                     for key in need_replace.keys():
