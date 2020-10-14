@@ -15,7 +15,7 @@ class Config:
 
 
 class DevelopmentConfig(Config):
-    DEBUG = True
+    DEBUG = False
 
     headers = {
         "Authorization": "Bearer s.KOmCzhE0ZoTo7MltoBs0eUdS"
@@ -28,6 +28,8 @@ class DevelopmentConfig(Config):
     REDIS_PASSWORD = ''
     REDIS_PORT = 6379
     REDIS_DB = 1
+
+    BROWERLESS_WS = "10.1.161.29:3000"
 
 
 class ProductionConfig(Config):

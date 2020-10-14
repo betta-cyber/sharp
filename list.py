@@ -9,11 +9,13 @@ import feedparser
 import re
 from urllib.parse import urlparse
 from threading import Thread
-from pyppeteer import launch, errors
+from pyppeteer import launch, errors, connect
 from bs4 import BeautifulSoup
-from utils import redis_c, load_yaml, md5
+from utils import redis_c, load_yaml, md5, get_ws_url
+from config import AppConfig
 
 logging.basicConfig(filename='debug.log', level=logging.INFO)
+default_config = AppConfig['default']
 
 
 COOKIES = {
@@ -120,10 +122,15 @@ class Listpipe:
             logging.info(' -- event -----')
             for list_obj in self.list_obj:
                 if not list_obj['url'].startswith('$'):
-                    browser = await launch(
-                        headless=True,
-                        args=['--disable-infobars', '--no-sandbox', '--disable-dev-shm-usage']
-                    )
+                    if default_config.DEBUG:
+                        browser = await launch(
+                            headless=true,
+                            args=['--disable-infobars', '--no-sandbox', '--disable-dev-shm-usage']
+                        )
+                    else:
+                        browser = await connect(
+                            {"browserwsendpoint": 'ws://%s' % get_ws_url()}
+                        )
                     page = await browser.newPage()
                     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                                     '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
@@ -144,10 +151,15 @@ class Listpipe:
             logging.info(' -- update info -----')
             for list_obj in self.list_obj:
                 if not list_obj['url'].startswith('$'):
-                    browser = await launch(
-                        headless=False,
-                        args=['--disable-infobars', '--no-sandbox']
-                    )
+                    if default_config.DEBUG:
+                        browser = await launch(
+                            headless=False,
+                            args=['--disable-infobars', '--no-sandbox']
+                        )
+                    else:
+                        browser = await connect(
+                            {"browserWSEndpoint": 'ws://%s' % get_ws_url()}
+                        )
                     page = await browser.newPage()
                     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                                     '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
@@ -171,10 +183,16 @@ class Listpipe:
             for list_obj in self.list_obj:
                 if not list_obj['url'].startswith('$'):
                     if list_obj['data-format'] == "html":
-                        browser = await launch(
-                            headless=True,
-                            args=['--disable-infobars', '--no-sandbox', '--disable-dev-shm-usage']
-                        )
+
+                        if default_config.DEBUG:
+                            browser = await launch(
+                                headless=True,
+                                args=['--disable-infobars', '--no-sandbox', '--disable-dev-shm-usage']
+                            )
+                        else:
+                            browser = await connect(
+                                {"browserWSEndpoint": 'ws://%s' % get_ws_url()}
+                            )
                         page = await browser.newPage()
                         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                                         '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')

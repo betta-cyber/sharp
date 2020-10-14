@@ -2,14 +2,15 @@
 
 import asyncio
 import time
-from pyppeteer import launch
+from pyppeteer import launch, connect
 from bs4 import BeautifulSoup
 from utils import DBHelper, md5
 import pymysql
 
 
 async def clawer(u):
-    browser = await launch(headless=False)
+    # browser = await launch(headless=False)
+    browser = await connect({"browserWSEndpoint": 'ws://10.1.161.29:3000'})
     page = await browser.newPage()
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                             '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')

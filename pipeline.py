@@ -7,14 +7,16 @@ import time
 import logging
 from datetime import datetime
 from threading import Thread
-from pyppeteer import launch
+from pyppeteer import launch, connect
 from bs4 import BeautifulSoup
-from utils import redis_c, load_yaml, get_today_zero
+from utils import redis_c, load_yaml, get_today_zero, get_ws_url
 from module.date_parser import TimeFinder
 from module.weight_parser import calculate_weight
 from module.vul_component import check_component
+from config import AppConfig
 
 logging.basicConfig(filename='debug.log', level=logging.INFO)
+default_config = AppConfig['default']
 
 
 class Pipeline:
@@ -40,10 +42,15 @@ class Pipeline:
         logging.debug(self._obj)
 
         if self._class == "event":
-            browser = await launch(
-                headless=True,
-                args=['--disable-infobars', '--no-sandbox']
-            )
+            if default_config.DEBUG:
+                browser = await launch(
+                    headless=True,
+                    args=['--disable-infobars', '--no-sandbox']
+                )
+            else:
+                browser = await connect(
+                    {"browserWSEndpoint": 'ws://%s' % get_ws_url()}
+                )
             page = await browser.newPage()
             await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                                     '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
@@ -55,10 +62,15 @@ class Pipeline:
             await browser.close()
             await self.analysis(self._obj)
         if self._class == "vul":
-            browser = await launch(
-                headless=True,
-                args=['--disable-infobars', '--no-sandbox', '--disable-dev-shm-usage']
-            )
+            if default_config.DEBUG:
+                browser = await launch(
+                    headless=True,
+                    args=['--disable-infobars', '--no-sandbox', '--disable-dev-shm-usage']
+                )
+            else:
+                browser = await connect(
+                    {"browserWSEndpoint": 'ws://%s' % get_ws_url()}
+                )
             page = await browser.newPage()
             await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                                     '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
