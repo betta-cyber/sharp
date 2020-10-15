@@ -65,6 +65,7 @@ async def clawer(u):
 
     await browser.close()
 
+
 def tc260_clawer():
     clawer_rule = [
         # https://www.cert.org.cn/publish/main/49/index.html

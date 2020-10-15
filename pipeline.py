@@ -105,14 +105,18 @@ class Pipeline:
 
     async def analysis(self, obj):
         logging.info('-- START ANALYSIS DETAIL PAGE --')
-        for k, v in obj.items():
-            if not k or not v:
-                raise Exception('config error')
-            self.result[k] = self.get_value(v)
-        self.result['class'] = "event"
-        logging.info('-- FINISH ANALYSIS DETAIL PAGE --')
-        logging.info(self.result)
-        redis_c.lpush('result', json.dumps(self.result))
+        try:
+            for k, v in obj.items():
+                if not k or not v:
+                    logging.error('-- ERROR %s %s --' % (k, v))
+                    raise Exception('config error')
+                self.result[k] = self.get_value(v)
+            self.result['class'] = "event"
+            logging.info('-- FINISH ANALYSIS DETAIL PAGE --')
+            logging.info(self.result)
+            redis_c.lpush('result', json.dumps(self.result))
+        except Exception as e:
+            logging.info('-- ERROR %s --' % e)
 
     async def analysis_vul(self, obj):
         logging.info('-- START ANALYSIS DETAIL PAGE --')
@@ -225,7 +229,9 @@ class Pipeline:
             value = self.slice_length(value, selector['length'])
         except Exception:
             pass
-        return value.strip()
+        if type(value) == str:
+            value = value.strip()
+        return value
 
 
 def start_thread_loop(loop):

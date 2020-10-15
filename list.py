@@ -82,7 +82,7 @@ class Listpipe:
                     raise
 
     async def parser(self):
-        logging.info('-- START PARSER LIST --')
+        logging.info('-- START PARSER %s %s LIST --' % (self.lclass, self.ltype))
         logging.debug(self.list_obj)
 
         if self.lclass == "intelligence":
@@ -96,7 +96,7 @@ class Listpipe:
                             )
                         else:
                             browser = await connect(
-                                {"browserwsendpoint": 'ws://%s' % get_ws_url()}
+                                {"browserWSEndpoint": 'ws://%s' % get_ws_url()}
                             )
                         page = await browser.newPage()
                         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -106,6 +106,7 @@ class Listpipe:
                         self.content = await page.content()
                         self.content = BeautifulSoup(self.content, 'html.parser')
                         await browser.close()
+                        # list obj 是数据结构
                         self.analysis_html(list_obj)
                     elif list_obj['data-format'] == "rss":
                         rss = feedparser.parse(list_obj['url'])
@@ -129,12 +130,12 @@ class Listpipe:
                 if not list_obj['url'].startswith('$'):
                     if default_config.DEBUG:
                         browser = await launch(
-                            headless=true,
+                            headless=True,
                             args=['--disable-infobars', '--no-sandbox', '--disable-dev-shm-usage']
                         )
                     else:
                         browser = await connect(
-                            {"browserwsendpoint": 'ws://%s' % get_ws_url()}
+                            {"browserWSEndpoint": 'ws://%s' % get_ws_url()}
                         )
                     page = await browser.newPage()
                     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -334,31 +335,47 @@ class Listpipe:
 
     def analysis_html(self, list_obj):
         logging.info('-- analysis html --')
-        try:
-            self.content = BeautifulSoup(self.content, 'html.parser', from_encoding='utf-8')
-        except Exception as e:
-            logging.error(' -- class: %s type: %s BeautifulSoup error %s -----' % (self.lclass, self.ltype, e))
+        # 如果不是bs的话，转换一道
+        if not isinstance(self.content, BeautifulSoup):
+            self.content = BeautifulSoup(self.content, 'html.parser')
+
         if self.lclass == "intelligence":
-            lists = self.content.select(list_obj['pattern']['selector'])
-            self.current_obj = list_obj
-            for i in lists:
-                # url is the most import thing
-                u = {
-                    "class": self.lclass,
-                    "raw_url": self.get_value(i, list_obj['response']['raw_url']),
-                    "title": self.get_value(i, list_obj['response']['title']).strip(),
-                    "summary": self.get_value(i, list_obj['response']['summary']),
-                    "publish_time": self.get_value(i, list_obj['response']['publish_time']),
-                    "source": self.get_value(i, list_obj['response']['source'])
-                }
-                url = u['raw_url']
-                uhash = str(md5(url))
-                if self.unique_url(url):
-                    u["rhash"] = uhash
-                    redis_c.lpush('result', json.dumps(u))
-                    logging.info('-- push url %s --' % url)
-                else:
-                    logging.info('-- exist url %s --' % url)
+            try:
+                if list_obj['pattern']['type'] == "list":
+                    if list_obj['pattern'].get('class'):
+                        list_dom = self.content.find_all('div', class_=list_obj['pattern']['class'])
+                    elif list_obj['pattern'].get('selector'):
+                        list_dom = self.content.select(list_obj['pattern']['selector'])
+                if list_obj['pattern']['type'] == "table":
+                    list_dom = self.content.find_all('tr')
+                if list_obj['pattern']['type'] == "h2":
+                    if list_obj['pattern'].get('class'):
+                        list_dom = self.content.find_all('h2', class_=list_obj['pattern']['class'])
+                    else:
+                        list_dom = self.content.find_all('h2')
+
+                self.current_obj = list_obj
+                for i in list_dom:
+                    # url is the most import thing
+                    u = {
+                        "class": self.lclass,
+                        "title": self.get_value(i, list_obj['response']['title']).strip(),
+                        "summary": self.get_value(i, list_obj['response']['summary']),
+                        "publish_time": self.get_value(i, list_obj['response']['publish_time']),
+                        "source": self.get_value(i, list_obj['response']['source']),
+                        "raw_url": self.get_value(i, list_obj['response']['raw_url'])
+                    }
+                    url = u['raw_url']
+                    uhash = str(md5(url))
+                    if self.unique_url(url):
+                        u["rhash"] = uhash
+                        redis_c.lpush('result', json.dumps(u))
+                        logging.info(u)
+                        logging.info('-- push url %s --' % url)
+                    else:
+                        logging.info('-- exist url %s --' % url)
+            except Exception as e:
+                logging.error('-- error %s --' % e)
         if self.lclass == "vul":
             lists = self.content.select(list_obj['pattern']['selector'])
             self.current_obj = list_obj
@@ -411,11 +428,11 @@ class Listpipe:
             for i in self.content:
                 u = {
                     "class": self.lclass,
-                    "raw_url": self.get_value(i, list_obj['response']['raw_url']),
                     "title": self.get_value(i, list_obj['response']['title']).strip(),
                     "summary": self.get_value(i, list_obj['response']['summary']),
                     "publish_time": time.strftime("%Y-%m-%d %H:%M", self.get_value(i, list_obj['response']['publish_time'])),
-                    "source": self.get_value(i, list_obj['response']['source'])
+                    "source": self.get_value(i, list_obj['response']['source']),
+                    "raw_url": self.get_value(i, list_obj['response']['raw_url'])
                 }
                 url = u['raw_url']
                 uhash = str(md5(url))

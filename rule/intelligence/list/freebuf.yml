@@ -1,0 +1,28 @@
+-
+  url: "https://www.freebuf.com/paper"
+  data-format: "html"
+  source: "freebuf"
+  pattern:
+    type: "list"
+    class: "article-item"
+  response:
+    title:
+      type: find_by_class
+      struct: string
+      pattern: "div|title-left"
+    raw_url:
+      type: hybrid
+      struct: string
+      pattern: 'https://www.freebuf.com{summary.href}'
+    summary:
+      type: find_by_class
+      struct: string
+      pattern: "a|text text-line-2"
+    source:
+      type: static
+      struct: string
+      pattern: "freebuf"
+    publish_time:
+      type: func
+      struct: string
+      pattern: "filter_time"
