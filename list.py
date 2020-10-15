@@ -193,7 +193,7 @@ class Listpipe:
                     if list_obj['data-format'] == "html":
                         if default_config.DEBUG:
                             browser = await launch(
-                                headless=True,
+                                headless=False,
                                 args=['--disable-infobars', '--no-sandbox', '--disable-dev-shm-usage']
                             )
                         else:
@@ -207,7 +207,6 @@ class Listpipe:
                         await page.goto(list_obj['url'])
                         self.content = await page.content()
                         self.content = BeautifulSoup(self.content, 'html.parser')
-                        logging.info(self.content)
                         await browser.close()
                         self.analysis_html(list_obj)
 
@@ -377,16 +376,29 @@ class Listpipe:
             except Exception as e:
                 logging.error('-- error %s --' % e)
         if self.lclass == "vul":
-            lists = self.content.select(list_obj['pattern']['selector'])
+            if list_obj['pattern']['type'] == "list":
+                if list_obj['pattern'].get('class'):
+                    list_dom = self.content.find_all('div', class_=list_obj['pattern']['class'])
+                elif list_obj['pattern'].get('selector'):
+                    list_dom = self.content.select(list_obj['pattern']['selector'])
+            if list_obj['pattern']['type'] == "table":
+                table = self.content.find_all('table')
+                list_dom = table[0].tbody.find_all('tr')
+            if list_obj['pattern']['type'] == "h2":
+                if list_obj['pattern'].get('class'):
+                    list_dom = self.content.find_all('h2', class_=list_obj['pattern']['class'])
+                else:
+                    list_dom = self.content.find_all('h2')
+
             self.current_obj = list_obj
-            for i in lists:
+            for i in list_dom:
                 # url is the most import thing
                 u = {
                     "class": self.lclass,
                     "type": self.ltype,
                     "source": self.get_value(i, list_obj['response']['source']),
-                    "url": self.get_value(i, list_obj['response']['url']),
                     "title": self.get_value(i, list_obj['response']['title']).strip(),
+                    "url": self.get_value(i, list_obj['response']['url']),
                 }
                 url = u['url']
                 uhash = str(md5(url))
@@ -440,6 +452,8 @@ class Listpipe:
                     u["rhash"] = uhash
                     redis_c.lpush('result', json.dumps(u))
                     logging.info('-- push url %s --' % url)
+                else:
+                    logging.info('-- exist url %s --' % url)
 
     def get_value(self, data, selector):
         try:

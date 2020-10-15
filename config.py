@@ -15,7 +15,7 @@ class Config:
 
 
 class DevelopmentConfig(Config):
-    DEBUG = False
+    DEBUG = True
 
     headers = {
         "Authorization": "Bearer s.KOmCzhE0ZoTo7MltoBs0eUdS"

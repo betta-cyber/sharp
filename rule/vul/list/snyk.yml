@@ -1,0 +1,20 @@
+-
+  url: "https://snyk.io/vuln"
+  data-format: "html"
+  source: "cnvd"
+  pattern:
+    type: "table"
+    list_class: "#idData > tbody"
+  response:
+    title:
+      type: tag
+      struct: string
+      pattern: "a"
+    url:
+      type: hybrid
+      struct: string
+      pattern: 'https://snyk.io{title.href}'
+    source:
+      type: static
+      struct: string
+      pattern: 'snyk'
