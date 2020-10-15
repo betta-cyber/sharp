@@ -1,0 +1,47 @@
+raw_url:
+  type: system
+  struct: string
+  pattern: $url
+commit_time:
+  type: selector
+  struct: string
+  pattern: "body > div.container.container-user.container-user-report-detail > div > div.section.section-user > div > div > div:nth-child(3) > div > div.content_rightblock > p.content_time > span"
+level:
+  type: func
+  struct: string
+  pattern: "get_vul_level"
+  dom: "body > div.container.container-user.container-user-report-detail > div > div.section.section-user > div > div > div:nth-child(3) > div > div.content_rightblock > p.content_rank > span"
+description:
+  type: selector
+  struct: string
+  pattern: "body > div.container.container-user.container-user-report-detail > div > div.section.section-user > div > div > div:nth-last-child(6) > div"
+cve_id:
+  type: func
+  struct: string
+  pattern: "find_cve"
+  dom: "body > div.container.container-user.container-user-report-detail > div > div.section.section-user > div > div > div:nth-child(8) > div"
+version:
+  type: selector
+  struct: string
+  pattern: "body > div.container.container-user.container-user-report-detail > div > div.section.section-user > div > div > div:nth-child(3) > div > div.content_leftblock > p.content_type > span"
+source_platform:
+  type: selector
+  struct: string
+  pattern: "body > div.container.container-user.container-user-report-detail > div > div.section.section-user > div > div > div:nth-child(4) > div > a"
+commit_user:
+  type: static
+  struct: string
+  pattern: "TSRC"
+update_type:
+  type: static
+  struct: string
+  pattern: "安全更新"
+update_title:
+  type: selector
+  struct: string
+  pattern: "body > div.container.container-user.container-user-report-detail > div > div.section.section-user > div > div > div:nth-child(5) > div"
+component:
+  type: func
+  struct: string
+  pattern: "find_component"
+  dom: "body > div.container.container-user.container-user-report-detail > div > div.section.section-user > div > div > h2"

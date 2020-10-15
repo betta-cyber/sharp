@@ -89,10 +89,15 @@ class Listpipe:
             for list_obj in self.list_obj:
                 if not list_obj['url'].startswith('$'):
                     if list_obj['data-format'] == "html":
-                        browser = await launch(
-                            headless=False,
-                            args=['--disable-infobars', '--no-sandbox']
-                        )
+                        if default_config.DEBUG:
+                            browser = await launch(
+                                headless=False,
+                                args=['--disable-infobars', '--no-sandbox']
+                            )
+                        else:
+                            browser = await connect(
+                                {"browserwsendpoint": 'ws://%s' % get_ws_url()}
+                            )
                         page = await browser.newPage()
                         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                                         '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
@@ -171,11 +176,13 @@ class Listpipe:
                     await browser.close()
                 else:
                     if list_obj['url'] == "$requests":
+                        # 采用requests 进行发包
+                        # 获取json格式数据解析。
+                        # 分析json数据的通常都直接过去
                         data = list_obj['data']
                         self.url_info = data['url']
                         r = requests.get(data['url'], headers=GITHUB_HEADERS, verify=False)
                         self.content = r.json()
-                        print(self.content)
                         self.analysis_json(list_obj)
 
         elif self.lclass == "vul":
@@ -183,7 +190,6 @@ class Listpipe:
             for list_obj in self.list_obj:
                 if not list_obj['url'].startswith('$'):
                     if list_obj['data-format'] == "html":
-
                         if default_config.DEBUG:
                             browser = await launch(
                                 headless=True,
@@ -252,13 +258,15 @@ class Listpipe:
                     "event_type": list_obj['event_type'],
                     "basetime": base_time + " 00:00:00"
                 }
-                print(u)
                 if self.unique_url(str(url)):
                     redis_c.lpush('target', json.dumps(u))
-                    print("push url %s" % url)
+                    logging.info('-- push url %s --' % url)
+                else:
+                    logging.error('-- exist url %s --' % url)
             except Exception:
                 pass
 
+    # 分析结构直接入库
     def analysis_json(self, list_obj):
         logging.info('-- analysis json --')
         if self.lclass == "intelligence":
@@ -276,7 +284,9 @@ class Listpipe:
                 if self.unique_url(url):
                     u["rhash"] = uhash
                     redis_c.lpush('result', json.dumps(u))
-                    print("push url %s" % url)
+                    logging.info('-- push url %s --' % url)
+                else:
+                    logging.error('-- exist url %s --' % url)
 
         elif self.lclass == "event":
             for i in self.content['list']:
@@ -290,20 +300,19 @@ class Listpipe:
                         "basetime": i[list_obj['basetime']['key']][:-2]
                     }
                     redis_c.lpush('target', json.dumps(u))
-                    print("push url %s" % url)
+                    logging.info('-- push url %s --' % url)
                 else:
-                    print("exist url %s" % url)
+                    logging.error('-- exist url %s --' % url)
 
         elif self.lclass == "update":
-            print("start update list")
             for i in self.content:
-                logging.info(i)
+                # logging.info(i)
+                # update 组件更新情报的数据结构
                 u = {
                     "class": self.lclass,
                     "raw_url": self.get_value(i, list_obj['response']['url']),
                     "component": self.get_value(i, list_obj['response']['component']),
                     "commit_time": self.get_value(i, list_obj['response']['commit_time']),
-                    # "commit_time": time.strftime("%Y-%m-%d %H:%M", self.get_value(i, list_obj['response']['commit_time'])),
                     "description": self.get_value(i, list_obj['response']['description']),
                     "source": self.get_value(i, list_obj['response']['source']),
                     "update_type": self.get_value(i, list_obj['response']['update_type']),
@@ -319,12 +328,16 @@ class Listpipe:
                     uhash = str(md5(url))
                     u["source_hash"] = uhash
                     redis_c.lpush('result', json.dumps(u))
-                    logging.info(url)
-                    print("push url %s" % url)
+                    logging.info('-- push url %s --' % url)
+                else:
+                    logging.error('-- exist url %s --' % url)
 
     def analysis_html(self, list_obj):
         logging.info('-- analysis html --')
-        self.content = BeautifulSoup(self.content, 'html.parser')
+        try:
+            self.content = BeautifulSoup(self.content, 'html.parser', from_encoding='utf-8')
+        except Exception as e:
+            logging.error(' -- class: %s type: %s BeautifulSoup error %s -----' % (self.lclass, self.ltype, e))
         if self.lclass == "intelligence":
             lists = self.content.select(list_obj['pattern']['selector'])
             self.current_obj = list_obj
@@ -343,7 +356,9 @@ class Listpipe:
                 if self.unique_url(url):
                     u["rhash"] = uhash
                     redis_c.lpush('result', json.dumps(u))
-                    print("push url %s" % url)
+                    logging.info('-- push url %s --' % url)
+                else:
+                    logging.info('-- exist url %s --' % url)
         if self.lclass == "vul":
             lists = self.content.select(list_obj['pattern']['selector'])
             self.current_obj = list_obj
@@ -361,9 +376,9 @@ class Listpipe:
                 if self.unique_url(url):
                     u["rhash"] = uhash
                     redis_c.lpush('target', json.dumps(u))
-                    print("push url %s" % url)
+                    logging.info('-- push url %s --' % url)
         if self.lclass == "update":
-            print("html update analysis")
+            logging.info('-- html update analysis --')
             if list_obj['pattern']['type'] == "h2":
                 if list_obj['pattern'].get('class'):
                     lists = self.content.find_all('h2', class_=list_obj['pattern']['class'])
@@ -386,7 +401,9 @@ class Listpipe:
                 if self.unique_url(url):
                     u["rhash"] = uhash
                     redis_c.lpush('target', json.dumps(u))
-                    print("push url %s" % url)
+                    logging.info('-- push url %s --' % url)
+                else:
+                    logging.info('-- exist url %s --' % url)
 
     def analysis_rss(self, list_obj):
         logging.info('-- analysis rss --')
@@ -405,7 +422,7 @@ class Listpipe:
                 if self.unique_url(url):
                     u["rhash"] = uhash
                     redis_c.lpush('result', json.dumps(u))
-                    print("push url %s" % url)
+                    logging.info('-- push url %s --' % url)
 
     def get_value(self, data, selector):
         try:
@@ -442,9 +459,9 @@ class Listpipe:
                     for i in matchs:
                         if '.' in i:
                             k = i.split('.')
-                            print(k)
+                            # print(k)
                             dom = self.get_dom(data, k[0])
-                            print(dom)
+                            # print(dom)
                             data = dom[k[1]]
                         need_replace[i] = data
                     for key in need_replace.keys():
@@ -523,4 +540,4 @@ if __name__ == '__main__':
             print(target)
             p = Listpipe(target)
             asyncio.run_coroutine_threadsafe(p.parser(), new_loop)
-            time.sleep(30)
+            time.sleep(3)

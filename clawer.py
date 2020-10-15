@@ -46,4 +46,4 @@ if __name__ == '__main__':
 
     # intelligence_clawer()
     # event_clawer()
-    vul_clawer()
+    # vul_clawer()

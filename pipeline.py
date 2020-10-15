@@ -82,6 +82,27 @@ class Pipeline:
             await browser.close()
             await self.analysis_vul(self._obj)
 
+        if self._class == "update":
+            if default_config.DEBUG:
+                browser = await launch(
+                    headless=True,
+                    args=['--disable-infobars', '--no-sandbox', '--disable-dev-shm-usage']
+                )
+            else:
+                browser = await connect(
+                    {"browserWSEndpoint": 'ws://%s' % get_ws_url()}
+                )
+            page = await browser.newPage()
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                    '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
+            await page.setViewport({'width': 1080, 'height': 960})
+            await page.goto(self.url)
+            self.content = await page.content()
+            self.content = BeautifulSoup(self.content, 'html.parser')
+
+            await browser.close()
+            await self.analysis_update(self._obj)
+
     async def analysis(self, obj):
         logging.info('-- START ANALYSIS DETAIL PAGE --')
         for k, v in obj.items():
@@ -101,6 +122,17 @@ class Pipeline:
             self.result[k] = self.get_value(v)
         self.result['class'] = "vul"
         self.result['source'] = self.source
+        logging.info('-- FINISH ANALYSIS DETAIL PAGE --')
+        logging.info(self.result)
+        redis_c.lpush('result', json.dumps(self.result))
+
+    async def analysis_update(self, obj):
+        logging.info('-- START ANALYSIS UPDATE DETAIL PAGE --')
+        for k, v in obj.items():
+            if not k or not v:
+                raise Exception('config error')
+            self.result[k] = self.get_value(v)
+        self.result['class'] = "update"
         logging.info('-- FINISH ANALYSIS DETAIL PAGE --')
         logging.info(self.result)
         redis_c.lpush('result', json.dumps(self.result))
@@ -215,4 +247,4 @@ if __name__ == '__main__':
             logging.info("start %s" % target)
             p = Pipeline(target)
             asyncio.run_coroutine_threadsafe(p.parser(), main_loop)
-        time.sleep(5)
+        time.sleep(1)
