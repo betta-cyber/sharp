@@ -39,28 +39,31 @@ class Pipeline:
 
     async def parser(self):
         logging.info('-- START PARSER DETAIL PAGE --')
-        logging.debug(self._obj)
+        # logging.debug(self._obj)
 
         if self._class == "event":
-            if default_config.DEBUG:
-                browser = await launch(
-                    headless=True,
-                    args=['--disable-infobars', '--no-sandbox']
-                )
-            else:
-                browser = await connect(
-                    {"browserWSEndpoint": 'ws://%s' % get_ws_url()}
-                )
-            page = await browser.newPage()
-            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                                    '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
-            # await page.setViewport({'width': 1080, 'height': 960})
-            await page.goto(self.url)
-            self.content = await page.content()
-            self.content = BeautifulSoup(self.content, 'html.parser')
+            try:
+                if default_config.DEBUG:
+                    browser = await launch(
+                        headless=True,
+                        args=['--disable-infobars', '--no-sandbox']
+                    )
+                else:
+                    browser = await connect(
+                        {"browserWSEndpoint": 'ws://%s' % get_ws_url()}
+                    )
+                page = await browser.newPage()
+                await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                        '(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299')
+                # await page.setViewport({'width': 1080, 'height': 960})
+                await page.goto(self.url)
+                self.content = await page.content()
+                self.content = BeautifulSoup(self.content, 'html.parser')
 
-            await browser.close()
-            await self.analysis(self._obj)
+                await browser.close()
+                await self.analysis(self._obj)
+            except Exception as e:
+                logging.info('-- ERROR %s --' % e)
         if self._class == "vul":
             if default_config.DEBUG:
                 browser = await launch(
@@ -250,7 +253,7 @@ if __name__ == '__main__':
         target = redis_c.rpop("target")
         if target:
             target = json.loads(target)
-            logging.info("start %s" % target)
+            logging.info("------- start %s --------" % target)
             p = Pipeline(target)
             asyncio.run_coroutine_threadsafe(p.parser(), main_loop)
         time.sleep(1)

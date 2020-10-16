@@ -3,12 +3,14 @@
 import redis
 import yaml
 import pymysql
+import logging
 import requests
 import hashlib
 from datetime import datetime, timedelta
 from config import AppConfig
 
 default_config = AppConfig['default']
+logging.basicConfig(filename='debug.log', level=logging.INFO)
 
 redis_c = redis.Redis(host=default_config.REDIS_HOST, \
                       port=default_config.REDIS_PORT, \
@@ -54,6 +56,7 @@ class DBHelper:
         self.user = 'root'
         self.pwd = 'root'
 
+        # self.db = db
         self.db = 'eye'
         self.conn = None
         self.cur = None
@@ -63,7 +66,7 @@ class DBHelper:
         try:
             self.conn = pymysql.connect(self.host, self.user, self.pwd, self.db, charset='utf8')
         except Exception as e:
-            print(e)
+            logging.info("connect mysql %s" % e)
             return False
         self.cur = self.conn.cursor()
         return True
@@ -87,7 +90,7 @@ class DBHelper:
                 self.conn.commit()
                 return True
         except Exception as e:
-            print(e)
+            logging.info("execute mysql %s" % e)
             self.close()
             return False
         return False
