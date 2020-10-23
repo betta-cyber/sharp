@@ -35,20 +35,21 @@ class Result:
         elif data['class'] == "event":
             for i in data['start']:
                 data_hash = md5(data['raw_url'] + str(i))
-                print(data_hash)
                 sql = "insert into sec_event (title, start, abstract, source, event_type, raw_url, weight, hash) values \
                     ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % \
                     (data['title'].strip(), i, data['abstract'].strip(), \
                      data['source'], data['event_type'], data['raw_url'], \
                      data['weight'], data_hash)
-                print(sql)
                 a = self.web_db.execute(sql)
-                print(a)
         elif data['class'] == "update":
             source_hash = md5(data['raw_url'])
-            time_st = time.strptime(data['commit_time'], "%Y-%m-%dT%H:%M:%SZ")
-            commit_time = time.strftime('%Y-%m-%d %H:%M', time_st)
-            # "publish_time": time.strftime("%Y-%m-%d %H:%M", self.get_value(i, list_obj['response']['publish_time'])),
+            try:
+                time_st = time.strptime(data['commit_time'], "%Y-%m-%dT%H:%M:%SZ")
+                commit_time = time.strftime('%Y-%m-%d %H:%M', time_st)
+            except Exception:
+                time_st = time.strptime(data['commit_time'], "%Y-%m-%d %H:%M:%S")
+                commit_time = time.strftime('%Y-%m-%d %H:%M', time_st)
+
             try:
                 sql = "insert into update_message (name, component, commit_time, update_type, description, source, cve_id, version, level, source_hash, source_platform, commit_user, update_title) values \
                     ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % \
@@ -58,10 +59,10 @@ class Result:
                      source_hash, data['source_platform'], data['commit_user'], data['update_title'])
                 logging.info("sql query %s" % sql)
                 a = self.eye_db.execute(sql)
-                print(a)
                 logging.info("sql query result %s" % a)
             except Exception as e:
-                print(str(e))
+                print(e)
+                logging.error("sql query error %s" % e)
         elif data['class'] == "vul":
             if data['source'] == "cnvd":
                 try:

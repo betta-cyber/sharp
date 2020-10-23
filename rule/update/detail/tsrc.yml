@@ -45,3 +45,7 @@ component:
   struct: string
   pattern: "find_component"
   dom: "body > div.container.container-user.container-user-report-detail > div > div.section.section-user > div > div > h2"
+source:
+  type: static
+  struct: string
+  pattern: "tsrc"
